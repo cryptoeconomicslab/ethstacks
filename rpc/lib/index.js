@@ -1,4 +1,5 @@
-var jayson = require('jayson');
+const jayson = require('jayson');
+const { apiTx } = require("../../childchain/lib/api");
 
 module.exports.run = childChain => {
   // create a server
@@ -6,7 +7,7 @@ module.exports.run = childChain => {
     // These RPC Method must align with ETH
     eth_sendRawTransaction: (args, cb) => {
       console.log(args)
-      childChain.apiTx(args[0]).then((result) => {
+      apiTx(args[0]).then((result) => {
         cb(null, result);
       }).catch((err) => {
         cb(err);
@@ -15,8 +16,7 @@ module.exports.run = childChain => {
     eth_blockNumber: (args, cb) => {
       // Get latest block for descending manner
       // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_blocknumber
-      let block = childChain.chain.getLatestBlock()
-      cb(block.number)
+      cb(childChain.blockHeight)
     },
     eth_getBlockTransactionCountByNumber: (args, cb) => {
       // Get block info for them

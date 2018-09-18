@@ -87,6 +87,7 @@ contract RootChain {
     }
 
     struct ChildChain {
+      bool initialized;
       address operator;
       mapping (uint256 => ChildBlock) blocks;
       uint256 currentChildBlock;
@@ -132,22 +133,24 @@ contract RootChain {
      */
 
     /**
-     * @dev add child chain
+     * @dev add child chain.
+     * msg.sender is to be the chainId.
      */
     function addChain()
       public
       returns (address)
     {
-//      require(msg.value >= 1);
-      require(msg.sender != childChains[_operator].operator);
-      address _operator = msg.sender;
-      ChildChain storage childChain =  childChains[_operator];
-      childChain.operator = _operator;
+      // require(msg.value >= 1);
+      require(!childChains[msg.sender].initialized); //Reason: struct doesn't allow to be empty
+      address _chain = msg.sender;
+      ChildChain storage childChain =  childChains[_chain];
+      childChain.initialized = true;
+      childChain.operator = _chain;
       childChain.currentChildBlock = CHILD_BLOCK_INTERVAL;
       childChain.currentDepositBlock = 1;
       childChain.currentFeeExit = 1;
       childChain.exitsQueues[address(0)] = address(new PriorityQueue());
-      return _operator;
+      return _chain;
     }
 
 

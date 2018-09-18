@@ -3,19 +3,37 @@ const { VMHash } = require('../../vm/lib/operations/crypto');
 const { assembleSource, PlasmaStateContract, PlasmaStateValue } = require('../../vm');
 const Snapshot = require('./state/snapshot');
 const Transaction = require('./tx');
+const ChainEvent = require('./chainevent');
 
 class Chain {
   
   constructor() {
     this.id = null;
-    this.blocks = [];
+    this.block = null;
     this.commitmentTxs = []; // TxVM idiom. Eq pendingTx
     this.snapshot = new Snapshot();
+    this.events = new ChainEvent(); // EventEmitter
+  }
+  setMetaDB(metaDB){
+    this.metaDB = metaDB;
+  }
+  setBlockDB(blockDB){
+    this.blockDB = blockDB;
+  }
+  async setChainID(chainID){
+    this.id = chainID;//eq with Operator's Address. See Rootchain.sol
+    await this.metaDB.put("chainID", chainID);
+  }
+  setSnapshot(snapshot){
+    this.snapshot = snapshot;
+  }
+  emit(eventName, payload){
+    this.events.emit(eventName, payload)
   }
 
   /**
    * apply deposit event
-   * @param {*} event ecent object of web3
+   * @param {*} event event object of web3
    */
   applyDeposit(event) {
     const returnValues = event.returnValues;
@@ -25,7 +43,10 @@ class Chain {
       returnValues.depositBlock
     );
     this.commitmentTxs.push(tx);
-    this.generateBlock();
+    this.emit("TxAdded", {
+      type: "deposit",
+      payload: tx
+    });
   }
   
   createDepositTx(depositor, amount, depositBlock) {
@@ -42,27 +63,50 @@ class Chain {
     depositTx.outputs.push(id);
     return depositTx;
   }
-
-  getLatestBlock(){
-    return this.blocks[this.blocks.length - 1];
-  }
   
   /**
    * generate block
    */
-  generateBlock() {
-    const newBlock = new Block(this.getLatestBlock());
-    const txs = this.commitmentTxs
-    txs.filter((tx) => {
-      if(this.snapshot.applyTx(tx)) {
-        return true;
-      }else{
-        return false
-      }
-    }).forEach((tx) => {
-      newBlock.appendTx(tx);
-    });
-    this.blocks.push(newBlock);
+  async generateBlock() {
+    this.blockHeight++;
+    await this.saveBlockHeight(); //async func
+
+    const newBlock = new Block(this.blockHeight);
+    this.commitmentTxs
+      .filter((tx) => !!this.snapshot.applyTx(tx) )
+      .forEach((tx) => newBlock.appendTx(tx) );
+    await this.saveBlock(newBlock); //async func
+
+    this.commitmentTxs = []
+    await this.saveCommitmentTxs();
+
+    this.emit("BlockGenerated", { payload: newBlock })
+  }
+
+  /*
+  * Fail-safe for sudden chain crash, resume functions
+  * */
+  async resume(){
+    // leveldb stored string as buffer
+    this.id = (await this.metaDB.get("chainID")).toString()
+    this.blockHeight = parseInt((await this.metaDB.get("blockHeight")).toString())
+    this.block = JSON.parse((await this.blockDB.get(this.blockHeight)).toString())
+    console.log("Chain.resume}||||||||||||||||||||||",(await this.metaDB.get("commitmentTxs")).toString())
+    this.commitmentTxs = JSON.parse((await this.metaDB.get("commitmentTxs")).toString())
+  }
+  async saveBlock(newBlock){
+    await this.blockDB.put(this.blockHeight, newBlock.toString());
+  }
+  async saveBlockHeight(){
+    await this.metaDB.put("blockHeight", this.blockHeight);
+  }
+  async saveCommitmentTxs(){
+    await this.metaDB.put("commitmentTxs", JSON.stringify(this.commitmentTxs));
+  }
+  gracefulStop(){
+    this.blockDB.close();
+    this.metaDB.close();
+    this.snapshot.db.close();
   }
 
 }

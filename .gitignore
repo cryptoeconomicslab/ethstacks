@@ -3,3 +3,7 @@
 node_modules
 yarn-error.log
 coverage
+.blockdb
+.snapshotdb
+.metadb
+.env

@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/cryptoeconomicslab/PlasmaVM-JS#readme",
   "dependencies": {
+    "dotenv": "^6.0.0",
     "wsrun": "^2.2.1"
   }
 }

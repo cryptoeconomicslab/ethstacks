@@ -3,6 +3,12 @@ const Listener = require("./listener/lib")
 const Rpc = require("./rpc/lib")
 
 
-let childChain = ChildChain.run()
-Listener.run(childChain)
-Rpc.run(childChain)
+async function main(){
+    let childChain = await ChildChain.run()
+    Listener.run(childChain)
+    Rpc.run(childChain)
+    childChain.emit("Ready", {});
+    return true;
+}
+
+main().then(_=> console.log("Done.") ).catch(e=> console.error(e) )

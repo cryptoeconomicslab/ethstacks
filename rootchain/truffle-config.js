@@ -13,6 +13,12 @@
  */
 
 module.exports = {
-  // See <http://truffleframework.com/docs/advanced/configuration>
-  // to customize your Truffle configuration!
+  rinkeby: {
+    provider: function() { 
+      return new HDWalletProvider(mnemonic, 'https://mainnet.infura.io/<infura-key>') 
+    },
+    network_id: '4',
+    gas: 4500000,
+    gasPrice: 10000000000,
+  }
 };

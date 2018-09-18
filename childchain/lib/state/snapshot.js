@@ -5,7 +5,9 @@ const leveldown = require('leveldown');
 class Snapshot {
   
   constructor() {
-    const db = levelup(leveldown('./testdb'));
+  }
+  setDB(db){
+    this.db = db;
     this.contTrie = new Trie(db); 
   }
 
