@@ -92,6 +92,48 @@ contract('TxVerificationTest', function ([user, owner, recipient, user4, user5])
       assert.equal(result, 0);
     });
 
+
+    it('should verify multisig', async function () {
+      const seg1 = {start: 0, end: CHUNK_SIZE};
+      const seg2 = {start: CHUNK_SIZE, end: CHUNK_SIZE.times(2)};
+      const p1 = Buffer.from('12345678ab', 'hex');
+      const p2 = Buffer.from('ab12345678', 'hex');
+      const h1 = utils.sha3(p1);
+      const h2 = utils.sha3(p2);
+      const input1 = new TransactionOutput(
+        [testAddress1],
+        [seg1],
+        [0],
+        0
+      );
+      const input2 = new TransactionOutput(
+        [testAddress2],
+        [seg2],
+        [0],
+        0
+      );
+      const output = new TransactionOutput(
+        [testAddress1, testAddress2],
+        [seg1, seg2],
+        [12, h1, h2]
+      );
+      const tx = new Transaction(
+        12,
+        [h1, h2],
+        new Date().getTime(),
+        [input1, input2],
+        [output]
+      );
+      let txBytes = tx.getBytes();
+      const sign1 = tx.sign(privKey1)
+      const sign2 = tx.sign(privKey2)
+      const result = await this.txVerificationTest.verifyTransaction(
+        utils.bufferToHex(txBytes),
+        utils.bufferToHex(Buffer.concat([sign1, sign2])),
+        {from: user, gas: gasLimit});
+      assert.equal(result, 0);
+    });
+
     it('should verify game transaction', async function () {
       const input = new TransactionOutput(
         [testAddress1],

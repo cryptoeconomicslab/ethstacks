@@ -263,6 +263,37 @@ library TxVerification {
     require(transaction.inputs[0].value[0].end == amount1.end);
   }
 
+  function multisig(Tx transaction, bytes32 txHash, bytes sigs)
+    internal
+    pure
+  {
+    bytes32 h1 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.args[0]));
+    bytes32 h2 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.args[1]));
+    bytes32 o1 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.outputs[0].state[1]));
+    bytes32 o2 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.outputs[0].state[2]));
+    require(o1
+     == h1);
+    require(o2 == h2);
+    // TODO: check owner and value
+  }
+
+  function reveal(Tx transaction, bytes32 txHash, bytes sigs)
+    internal
+    pure
+  {
+    bytes32 h1 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.inputs[0].state[1]));
+    bytes32 h2 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.inputs[0].state[2]));
+    bytes32 p1 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.args[0]));
+    bytes32 p2 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.args[1]));
+    bytes32 o1 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.outputs[0].state[1]));
+    bytes32 o2 = ByteUtils.bytesToBytes32(RLP.toBytes(transaction.outputs[0].state[2]));
+    require(keccak256(p1) == h1 && keccak256(p2) == h2);
+    require(o1 == p1);
+    require(o2 == p2);
+    // TODO: check owner and value
+  }
+
+
    /*
   function updateReverseStatus(Tx transaction)
     internal
