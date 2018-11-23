@@ -15,7 +15,7 @@ module.exports = function() {
   });
   
   server.on('published', function(packet, client) {
-    console.log('mqtt:published', packet.payload);
+    console.log('mqtt:published', packet.payload.toString());
   });
   
   server.on('ready', setup);
