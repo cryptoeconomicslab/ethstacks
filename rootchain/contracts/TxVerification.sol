@@ -225,6 +225,10 @@ library TxVerification {
       split(transaction, txHash, sigs);
     }else if(transaction.label == 2) {
       exchange(transaction);
+    }else if(transaction.label == 12) {
+      multisig(transaction, txHash, sigs);
+    }else if(transaction.label == 14) {
+      multisigEnd(transaction, txHash, sigs);
     }else if(transaction.label == 100) {
       //updateReverseStatus(transaction);
     }
@@ -293,6 +297,76 @@ library TxVerification {
     // TODO: check owner and value
   }
 
+  function multisigEnd(Tx transaction, bytes32 txHash, bytes sigs)
+    internal
+    pure
+  {
+    bytes memory cards1 = RLP.toBytes(transaction.inputs[0].state[1]);
+    bytes memory cards2 = RLP.toBytes(transaction.inputs[0].state[2]);
+    uint8 rank1 = oddsCal(cards1);
+    uint8 rank2 = oddsCal(cards2);
+    address userA = transaction.inputs[0].owners[0];
+    address userB = transaction.inputs[0].owners[1];
+    if(rank1 > rank2) {
+      require(transaction.outputs[0].owners[0] == userA);
+      require(transaction.outputs[1].owners[0] == userA);
+    }else if(rank1 < rank2) {
+      require(transaction.outputs[0].owners[0] == userB);
+      require(transaction.outputs[1].owners[0] == userB);
+    }else{
+      require(transaction.outputs[0].owners[0] == userA);
+      require(transaction.outputs[1].owners[0] == userB);
+    }
+  }
+
+  function oddsCal(bytes a)
+    internal
+    pure
+    returns (uint8)
+  {
+    bool r3 = false;
+    uint8 r2 = 0;
+    for (uint i = 0;i < 13;i++) {
+      uint8 r = (a & (0x8004002001 << i));
+      if (r >= 3) {
+        // 3 card
+        r3 = true;
+      } else if(r >= 2) {
+        // pair
+        r2 += 1;
+      }
+    }
+    bytes13 s = bytes13((a & (0x1FFF)) | (a & (0x1FFF << 13)) | (a & (0x1FFF << 26)) | (a & (0x1FFF << 39)));
+    for (uint j = 0;j < 8;j++) {
+      if(bool(s & (0x0f << j))) {
+        // straight
+        return 5;
+      }
+    }
+    if(
+      bool(a & 0x1FFF) || bool(a & (0x1FFF << 13)) || bool(a & (0x1FFF << 26)) || bool(a & (0x1FFF << 39))) {
+        // flush
+        return 6;
+    }else{
+      if(r3) {
+        if(r2 == 1) {
+          // full house
+          return 7;
+        }else{
+          // 3 card
+          return 4;
+        }
+      }else{
+        if(r2 == 1) {
+          // 1 pair
+          return 2;
+        }else if(r2 == 2) {
+          // 2 pair
+          return 3;
+        }
+      }
+    }
+  }
 
    /*
   function updateReverseStatus(Tx transaction)
