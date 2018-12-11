@@ -17,6 +17,7 @@
     "@babel/runtime-corejs2": "^7.1.5",
     "bignumber.js": "^8.0.1",
     "ethereumjs-util": "^5.2.0",
+    "prime-number": "^0.2.2",
     "rlp": "^2.1.0"
   },
   "devDependencies": {
