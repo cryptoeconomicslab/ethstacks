@@ -60,19 +60,21 @@ contract RootChain {
     struct Exit {
       uint256 blkNum;
       uint256 exitableAt;
+      bytes prevTx;
       // exiting output is always one
       ExitTxo output;
-      // exiting transaction's input is always one
-      ExitTxo input;
       // There are multiple challenges
       uint8 challengeCount;
     }
 
     uint8 public constant CHALLENGE_STATE_FIRST = 1;
     uint8 public constant CHALLENGE_STATE_RESPONDED = 2;
-    uint8 public constant CHALLENGE_STATE_SECOND = 3;
+    uint8 public constant CHALLENGE_STATE_RESPONDED_PARENT = 3;
+    uint8 public constant CHALLENGE_STATE_SECOND = 4;
 
     struct Challenge {
+      bytes txBytes1;
+      bytes cTxBytes;
       // ch1 output
       ExitTxo output1;
       // ch1 blkNum
@@ -252,8 +254,8 @@ contract RootChain {
 
       addToExitList(
         msg.sender,
-        input,
         output,
+        _exitTxBytes,
         _blkNum,
         childBlock.timestamp);
     }
@@ -342,6 +344,8 @@ contract RootChain {
       }else if(challenge.status == 0) {
         require(_cPos == _cBlkNum * 1000000 + getSlot(challengeTx.outputs[_cIndex].value[0]));
         challenges[_cPos] = Challenge({
+          txBytes1: _txBytes,
+          cTxBytes: _txBytes,
           output1: output,
           blkNum1: _cBlkNum,
           cOutput: output,
@@ -432,10 +436,10 @@ contract RootChain {
 
     /**
      * @dev respond parent tx of exiting tx
-     * @param _rInputIndex is the index of inputs
+     * @param _eInputIndex is the index of inputs
      */
     function respondParent(
-      uint256 _rInputIndex,
+      uint256 _eInputIndex,
       uint256 _rOutputIndex,
       uint256 _rBlkNum,
       uint256 _eUtxoPos,
@@ -448,31 +452,53 @@ contract RootChain {
       Exit exit = exits[_eUtxoPos];
       var challenge = challenges[_challengePos];
       var respondTx = TxDecoder.getTx(_txBytes);
+      var exitingTx = TxDecoder.getTx(exit.prevTx);
+      // response tx should older than exiting tx
+      require(_rBlkNum < exit.blkNum);
       checkTx(
         blocks[_rBlkNum].root,
         _txBytes,
         _txInfos,
-        respondTx.inputs[_rInputIndex].value,
+        respondTx.inputs[_rOutputIndex].value,
         respondTx
       );
       // respond tx should not be child of challenge1 tx
       require(withinRange(
-        respondTx.inputs[_rInputIndex].value,
-        exit.output), '_rInputIndex is not correct');
-      require(withinRange(
         respondTx.outputs[_rOutputIndex].value,
         exit.output), '_rOutputIndex is not correct');
+      require(withinRange(
+        respondTx.outputs[_rOutputIndex].value,
+        challenge.output1), '_rOutputIndex is not correct');
       require(
-        keccak256TxOutput(respondTx.inputs[_rInputIndex]) != keccak256ExitTxo(challenge.output1),
-        'respondTx is double spent');
-      require(keccak256TxOutput(respondTx.outputs[_rOutputIndex]) == keccak256ExitTxo(exit.input));
-      if(_rBlkNum < challenge.blkNum1) {
+        keccak256TxOutput(respondTx.outputs[_rOutputIndex]) == keccak256TxOutput(exitingTx.inputs[_eInputIndex]));
+      if(challenge.status == CHALLENGE_STATE_FIRST && _rBlkNum < challenge.blkNum1) {
         delete challenges[_challengePos];
         exit.challengeCount--;
+        challenge.status = CHALLENGE_STATE_RESPONDED_PARENT;
+        exit.prevTx = _txBytes;
       }
-      exit.input = getExitTxo(
-        respondTx.inputs[_rInputIndex],
-        respondTx.inputs[_rInputIndex].blkNum);
+    }
+
+    function challengeBetween(
+      uint256 _cInputIndex,
+      uint256 _rOutputIndex,
+      uint256 _eUtxoPos,
+      uint256 _cPos
+    )
+      public
+    {
+      Exit exit = exits[_eUtxoPos];
+      // prevTx
+      var prevTx = TxDecoder.getTx(exit.prevTx);
+      var challenge = challenges[_cPos];
+      var challengeTx = TxDecoder.getTx(challenge.cTxBytes);
+      if(challenge.status == CHALLENGE_STATE_RESPONDED_PARENT) {
+        // check double spent
+        require(
+          keccak256TxOutput(prevTx.outputs[_rOutputIndex]) == keccak256TxOutput(challengeTx.inputs[_cInputIndex]),
+          'respondTx is not double spent');
+        delete exits[_eUtxoPos];
+      }
     }
 
     /**
@@ -596,8 +622,8 @@ contract RootChain {
      */
     function addToExitList(
       address _exitor,
-      TxDecoder.TxState _input,
       TxDecoder.TxState _utxo,
+      bytes _exitTxBytes,
       uint256 _blkNum,
       uint256 _created_at
     )
@@ -608,7 +634,7 @@ contract RootChain {
       exits[_utxoPos] = Exit({
         blkNum: _blkNum,
         exitableAt: exitableAt,
-        input: getExitTxo(_input, _input.blkNum),
+        prevTx: _exitTxBytes,
         output: getExitTxo(_utxo, _blkNum),
         challengeCount: 0
       });
