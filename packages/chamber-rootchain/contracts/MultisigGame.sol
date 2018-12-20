@@ -21,13 +21,19 @@ contract MultisigGame {
     uint256 winner;
   }
 
-  function verify(bytes txBytes, bytes32 txHash, bytes sigs)
+  function verify(
+    bytes txBytes,
+    bytes32 txHash,
+    bytes32 merkleHash,
+    bytes sigs,
+    bytes confsigs
+  )
     internal
     pure
   {
     TxDecoder.Tx memory transaction = TxDecoder.getTx(txBytes);
     if(transaction.label == 21) {
-      multisig(transaction, txHash, sigs);
+      multisig(transaction, txHash, merkleHash, sigs, confsigs);
     }else if(transaction.label == 22) {
       reveal(transaction, txHash, sigs);
     }else{
@@ -35,7 +41,13 @@ contract MultisigGame {
     }
   }
 
-   function multisig(TxDecoder.Tx transaction, bytes32 txHash, bytes sigs)
+  function multisig(
+    TxDecoder.Tx transaction,
+    bytes32 txHash,
+    bytes32 merkleHash,
+    bytes sigs,
+    bytes confsigs
+  )
     internal
     pure
   {
@@ -46,6 +58,12 @@ contract MultisigGame {
     require(o1 == h1);
     require(o2 == h2);
     // TODO: check owner and value
+    address userA = transaction.inputs[0].owners[0];
+    address userB = transaction.inputs[1].owners[0];
+    require(userA == ECRecovery.recover(txHash, ByteUtils.slice(sigs, 0, 65)));
+    require(userB == ECRecovery.recover(txHash, ByteUtils.slice(sigs, 65, 65)));
+    require(userA == ECRecovery.recover(merkleHash, ByteUtils.slice(confsigs, 0, 65)));
+    require(userB == ECRecovery.recover(merkleHash, ByteUtils.slice(confsigs, 65, 65)));
   }
 
   function reveal(TxDecoder.Tx transaction, bytes32 txHash, bytes sigs)

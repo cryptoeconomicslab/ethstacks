@@ -35,7 +35,13 @@ library TxVerification {
         exchange(transaction);
       }
     } else {
-      transaction.verifier.call('verify', txBytes, txHash, sigs);
+      transaction.verifier.call(
+        'verify',
+        txBytes,
+        txHash,
+        merkleHash,
+        sigs,
+        confsigs);
     }
   }
 
