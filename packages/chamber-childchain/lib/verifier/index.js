@@ -1,11 +1,12 @@
 const std = require('./std');
 const MultisigGame = require('./MultisigGame');
 
-/*
-  const verifiers = {
-    "0x....": MultisigGame
-  }
-*/
+/**
+ * verifiers should be loaded from config file
+ */
+const verifiers = {
+  "0x9fbda871d559710256a2502a2517b794b482db40": MultisigGame
+}
 
 class Verifier {
 
@@ -23,8 +24,7 @@ class Verifier {
         }
       }else{
         // check tx.verifier
-        // verifiers[tx.verifier].verify(tx)
-        const outputs = MultisigGame.verify(tx);
+        const outputs = verifiers[tx.verifier].verify(tx);
         return Verifier.eq(tx.outputs, outputs);
       }
       return false;
