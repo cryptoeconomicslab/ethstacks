@@ -168,6 +168,68 @@ class BaseWallet {
     });
   }
 
+  /**
+   * @name challengeBefore
+   * @param {Integer} exitPos exitPos is id of "Exit".
+   * @param {TransactionOutput} utxo utxo is used for challenge
+   */
+  async challengeBefore(exitPos, utxo) {
+    const tx = await this.getTransactions(utxo);
+    const txInfo = RLP.encode([tx.proof, tx.sigs, tx.confsig]);
+    const cPos = tx.blkNum * 1000000 + utxo.getStartSlot(CHUNK_SIZE, 0);
+
+    return await this.rootChain.challengeBefore(
+      tx.outputIndex,
+      tx.blkNum,
+      exitPos,
+      cPos,
+      utils.bufferToHex(tx.getBytes()),
+      utils.bufferToHex(txInfo),
+      {from: recipient, gas: 800000});
+  }
+
+  /**
+   * @name respondChallenge
+   * @param {Integer} exitPos exitPos is id of "Exit".
+   * @param {Integer} cPos cPos is id of "Challenge".
+   * @param {TransactionOutput} utxo utxo is used for respond
+   */
+  async respondChallenge(exitPos, cPos, utxo) {
+    const tx = await this.getTransactions(utxo);
+    const txInfo = RLP.encode([tx.proof, tx.sigs, tx.confsig]);
+
+    return await this.rootChain.challengeBefore(
+      tx.outputIndex,
+      tx.blkNum,
+      exitPos,
+      cPos,
+      utils.bufferToHex(tx.getBytes()),
+      utils.bufferToHex(txInfo),
+      {from: recipient, gas: 800000});
+  }
+
+  /**
+   * @name respondParent
+   * @param {Integer} exitPos exitPos is id of "Exit".
+   * @param {Integer} eInputIndex eInputIndex is input's index of exiting transaction.
+   * @param {Integer} cPos cPos is id of "Challenge".
+   * @param {TransactionOutput} utxo 
+   */
+  async respondParent(exitPos, eInputIndex, cPos, utxo) {
+    const tx = await this.getTransactions(utxo);
+    const txInfo = RLP.encode([tx.proof, tx.sigs, tx.confsig]);
+
+    return await this.rootChain.respondParent(
+      tx.inputIndex,
+      eInputIndex,
+      tx.blkNum,
+      exitPos,
+      cPos,
+      utils.bufferToHex(tx.getBytes()),
+      utils.bufferToHex(txInfo),
+      {from: recipient, gas: 800000});
+  }
+  
   getUTXOs() {
     return Object.keys(this.utxos).map(k => {
       return TransactionOutput.fromTuple(RLP.decode(Buffer.from(this.utxos[k], 'hex')));
