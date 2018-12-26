@@ -1,5 +1,12 @@
 const utils = require('ethereumjs-util');
 
+/**
+ * @name checkSigs
+ * @description check signatures
+ * @param {Array[String]} owners owners are list of hex string of address 
+ * @param {Buffer} sigs ethereum signatures
+ * @param {Buffer} hash keccak256 hash
+ */
 function checkSigs(owners, sigs, hash) {
   if(sigs.length != owners.length) {
     throw new Error('signatures not enough');

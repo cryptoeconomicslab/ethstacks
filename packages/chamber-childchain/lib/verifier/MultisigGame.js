@@ -15,6 +15,11 @@ const {
 const MULTISIG_COMMIT = 21;
 const MULTISIG_REVEAL = 22;
 
+/**
+ * @name verify
+ * @description entry point of Rock-paper-scissors verifier
+ * @param {Transaction} tx 
+ */
 function verify(tx) {
   if(tx.label == MULTISIG_COMMIT) {
     return commit(tx.inputs, tx.args, tx.getSigs(), tx.hash());
@@ -23,6 +28,13 @@ function verify(tx) {
   }
 }
 
+/**
+ * @name commit
+ * @param {Array[TransactionOutput]} inputs 
+ * @param {Array[Buffer]} args 
+ * @param {Buffer} sigs 
+ * @param {Buffer} hash 
+ */
 function commit(inputs, args, sigs, hash) {
   const h1 = args[0];
   const h2 = args[1];
@@ -41,6 +53,13 @@ function commit(inputs, args, sigs, hash) {
   return [output];
 }
 
+/**
+ * @name reveal
+ * @param {Array[TransactionOutput]} inputs 
+ * @param {Array[Buffer]} args 
+ * @param {Buffer} sigs 
+ * @param {Buffer} hash 
+ */
 function reveal(inputs, args, sigs, hash) {
   const h1 = inputs[0].state[1];
   const h2 = inputs[0].state[2];
