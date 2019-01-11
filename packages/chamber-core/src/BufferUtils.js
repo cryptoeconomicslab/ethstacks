@@ -17,6 +17,19 @@ class BufferUtils {
     if(str.length % 2 === 1) str = '0' + str;
     return Buffer.from(str, 'hex');
   }
+
+  /**
+   * bignumTo32BytesBuf
+   * @param {BigNumber} bn 
+   */
+  static bignumTo32BytesBuf(bn) {
+    let str = bn.toString(16);
+    const rem = 64 - str.length;
+    for(let i = 0;i < rem;i++) {
+      str = '0' + str;
+    }
+    return Buffer.from(str, 'hex');
+  }
 }
 
 module.exports = BufferUtils;
