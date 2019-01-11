@@ -26,7 +26,7 @@ class SumMerkleTreeNode {
   }
 
   static getEmpty() {
-    return Node(
+    return new SumMerkleTreeNode(
       utils.zeros(32),
       BigNumber(0)
     );
@@ -56,7 +56,7 @@ class SumMerkleTree {
     const layer = leaves.concat(
       Array.from(
         Array(Math.pow(2, depth) - leaves.length),
-        () => utils.zeros(32)));
+        () => SumMerkleTreeNode.getEmpty()));
 
     this.leaves = layer;
     this.layers = [layer].concat(this.createLayers(layer));
@@ -137,7 +137,7 @@ class SumMerkleTree {
   }
 
   verify(
-    currentAmount,
+    range,
     value,
     index,
     totalAmount,
@@ -149,9 +149,9 @@ class SumMerkleTree {
       return false;
     }
 
+    let currentAmount = range;
     let hash = value;
     let lastLeftAmount = 0
-    let lastRightmount = 0
     for(let i = 0; i < proof.length; i += 64) {
       const amount = proof.slice(i, i + 32);
       const node = proof.slice(i + 32, i + 64);
@@ -159,18 +159,15 @@ class SumMerkleTree {
       let buf = [];
       if(index % 2 === 0) {
         buf = [currentAmountBuf, hash, amount, node];
-        lastLeftAmount = currentAmount;
-        lastRightmount = BufferUtils.bufferToBignum(amount);
       }else{
         buf = [amount, node, currentAmountBuf, hash];
-        lastLeftAmount = BufferUtils.bufferToBignum(amount);
-        lastRightmount = currentAmount;
+        lastLeftAmount = currentAmount.minus(range);
       }
-      currentAmount = lastLeftAmount.plus(lastRightmount);
+      currentAmount = currentAmount.plus(BufferUtils.bufferToBignum(amount));
       hash = utils.keccak(Buffer.concat(buf));
       index = Math.floor(index / 2);
     }
-
+    
     return (
       Buffer.compare(hash, root) === 0
       && currentAmount.eq(totalAmount)

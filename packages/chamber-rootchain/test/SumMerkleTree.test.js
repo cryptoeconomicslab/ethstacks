@@ -38,6 +38,10 @@ contract('SumMerkleTreeTest', function ([user, owner, recipient, user4, user5]) 
         new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000004', 'hex'),
         BigNumber(5)
       );
+      leaves[4] = new SumMerkleTreeNode(
+        new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000005', 'hex'),
+        BigNumber(10)
+      );
       const tree = new SumMerkleTree(leaves);
       const root = tree.root();
       const proof = tree.proof(leaves[2]);
@@ -45,7 +49,7 @@ contract('SumMerkleTreeTest', function ([user, owner, recipient, user4, user5]) 
         leaves[2].getLengthAsBigNumber().toNumber(),  // leaf amount
         utils.bufferToHex(leaves[2].getHash()),       // leaf hash
         2,
-        14, // total deposit
+        24, // total deposit
         5, // left offset
         utils.bufferToHex(root),
         utils.bufferToHex(proof),

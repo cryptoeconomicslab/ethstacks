@@ -34,10 +34,9 @@ library SumMerkleTree {
       }
       if (index % 2 == 0) {
         computedHash = keccak256(currentAmount, computedHash, amount, proofElement);
-        lastLeftAmount = currentAmount;
       } else {
         computedHash = keccak256(amount, proofElement, currentAmount, computedHash);
-        lastLeftAmount = amount;
+        lastLeftAmount = currentAmount - range;
       }
       currentAmount += amount;
       index = index / 2;
