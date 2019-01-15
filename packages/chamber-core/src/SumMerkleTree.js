@@ -35,7 +35,8 @@ class SumMerkleTreeNode {
 }
 
 /**
- * @dev SumMerkleTree
+ * @description SumMerkleTree
+ *     see https://ethresear.ch/t/plasma-prime-design-proposal/4222
  */
 class SumMerkleTree {
 
@@ -136,6 +137,16 @@ class SumMerkleTree {
     return Buffer.concat(proof);
   }
 
+  /**
+   * @description verify the leaf is included in tree
+   * @param {Number} range is amount of the leaf to verify
+   * @param {Buffer} value is the leaf value
+   * @param {Number} index is index of the leaf to verify
+   * @param {Number} totalAmount is total amount of tree
+   * @param {Number} leftOffset is the position of the leaf from left
+   * @param {Buffer} root is root of tree
+   * @param {Buffer} proof is proof for the leaf
+   */
   verify(
     range,
     value,

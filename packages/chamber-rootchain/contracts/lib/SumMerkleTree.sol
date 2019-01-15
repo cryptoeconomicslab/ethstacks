@@ -4,9 +4,20 @@ pragma solidity ^0.4.24;
 /**
  * @title SumMerkleTree
  * @dev Checks that a particular leaf node is in a given Merkle tree given the index, root hash, and a proof
+ *     and check offset and total amount.
  */
 library SumMerkleTree {
 
+  /**
+   * @dev verify the leaf is included in tree
+   * @param range is amount of the leaf to verify
+   * @param leaf is the leaf value
+   * @param index is index of the leaf to verify
+   * @param totalAmount is total amount of tree
+   * @param leftOffset is the position of the leaf from left
+   * @param rootHash is root of tree
+   * @param proof is proof for the leaf
+   */
   function checkMembership(
     uint256 range,
     bytes32 leaf,
