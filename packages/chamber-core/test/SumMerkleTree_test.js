@@ -9,28 +9,29 @@ describe('SumMerkleTree', function() {
 
   describe('verify', function() {
 
+    const leaves = [];
+    leaves[0] = new SumMerkleTreeNode(
+      new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000001', 'hex'),
+      BigNumber(2)
+    );
+    leaves[1] = new SumMerkleTreeNode(
+      new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000002', 'hex'),
+      BigNumber(3)
+    );
+    leaves[2] = new SumMerkleTreeNode(
+      new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000003', 'hex'),
+      BigNumber(4)
+    );
+    leaves[3] = new SumMerkleTreeNode(
+      new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000004', 'hex'),
+      BigNumber(5)
+    );
+    leaves[4] = new SumMerkleTreeNode(
+      new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000005', 'hex'),
+      BigNumber(10)
+    );
+
     it('should be success to verify', function() {
-      const leaves = [];
-      leaves[0] = new SumMerkleTreeNode(
-        new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000001', 'hex'),
-        BigNumber(2)
-      );
-      leaves[1] = new SumMerkleTreeNode(
-        new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000002', 'hex'),
-        BigNumber(3)
-      );
-      leaves[2] = new SumMerkleTreeNode(
-        new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000003', 'hex'),
-        BigNumber(4)
-      );
-      leaves[3] = new SumMerkleTreeNode(
-        new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000004', 'hex'),
-        BigNumber(5)
-      );
-      leaves[4] = new SumMerkleTreeNode(
-        new Buffer('f19587814e8e932897572358b3c0ca6d9cbcc71654b1d312195607aa2b000005', 'hex'),
-        BigNumber(10)
-      );
       const tree = new SumMerkleTree(leaves);
       const root = tree.root();
       const proof = tree.proof(leaves[2]);
@@ -44,6 +45,49 @@ describe('SumMerkleTree', function() {
         root,
         proof), true);
     });
+
+    it('should be failed to verify by invalid total deposit', function() {
+      const tree = new SumMerkleTree(leaves);
+      const root = tree.root();
+      const proof = tree.proof(leaves[2]);
+      assert.equal(tree.verify(
+        leaves[2].getLengthAsBigNumber(), // leaf amount
+        leaves[2].getHash(),    // leaf hash
+        2,
+        BigNumber(30), // total deposit
+        BigNumber(5), // left offset
+        root,
+        proof), false);
+    });
+
+    it('should be failed to verify by invalid left offset', function() {
+      const tree = new SumMerkleTree(leaves);
+      const root = tree.root();
+      const proof = tree.proof(leaves[2]);
+      assert.equal(tree.verify(
+        leaves[2].getLengthAsBigNumber(), // leaf amount
+        leaves[2].getHash(),    // leaf hash
+        2,
+        BigNumber(24), // total deposit
+        BigNumber(7), // left offset
+        root,
+        proof), false);
+    });
+
+    it('should be failed to verify because of non-inclusion', function() {
+      const tree = new SumMerkleTree(leaves);
+      const root = tree.root();
+      const proof = tree.proof(leaves[2]);
+      assert.equal(tree.verify(
+        leaves[0].getLengthAsBigNumber(), // leaf amount
+        leaves[0].getHash(),    // leaf hash
+        2,
+        BigNumber(24), // total deposit
+        BigNumber(5), // left offset
+        root,
+        proof), false);
+    });
+
 
   });
 
