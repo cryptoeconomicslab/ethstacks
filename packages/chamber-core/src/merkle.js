@@ -37,7 +37,7 @@ class MerkleTree {
     for(let i = 0; i < nodes.length; i += 2) {
       const left = nodes[i];
       const right = nodes[i + 1];
-      treeLevel.push(utils.sha3(Buffer.concat([left, right])));
+      treeLevel.push(utils.keccak(Buffer.concat([left, right])));
     }
 
     if(nodes.length % 2 === 1) {
@@ -95,7 +95,7 @@ class MerkleTree {
     for(let i = 0; i < proof.length; i += 32) {
       const node = proof.slice(i, i + 32);
       const buf = (index % 2 === 0) ? ([hash, node]) : ([node, hash]);
-      hash = utils.sha3(Buffer.concat(buf));
+      hash = utils.keccak(Buffer.concat(buf));
       index = Math.floor(index / 2);
     }
 

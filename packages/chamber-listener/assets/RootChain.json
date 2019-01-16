@@ -170,35 +170,11 @@
               "type": "address[]"
             },
             {
-              "components": [
-                {
-                  "name": "start",
-                  "type": "uint256"
-                },
-                {
-                  "name": "end",
-                  "type": "uint256"
-                }
-              ],
-              "name": "value",
-              "type": "tuple[]"
+              "name": "values",
+              "type": "uint256[]"
             },
             {
-              "components": [
-                {
-                  "name": "len",
-                  "type": "uint256"
-                },
-                {
-                  "name": "memPtr",
-                  "type": "uint256"
-                }
-              ],
               "name": "state",
-              "type": "tuple[]"
-            },
-            {
-              "name": "stateBytes",
               "type": "bytes"
             },
             {
@@ -207,7 +183,7 @@
             }
           ],
           "indexed": false,
-          "name": "state",
+          "name": "output",
           "type": "tuple"
         }
       ],

@@ -13,23 +13,29 @@ Plasma is a 2nd layer scaling solution focusing on transaction's throughput per 
 
 ## Folder Structure
 
+### core
+The core module of Plasma.
+The definition of Transaction and Block.
+Utilities for Plasma core logic.
+
 ### rootchain
-- Solidity contract for deposit, commit, startExit, exitChallenge, finalizeExit, withdraw, state transition verification
+Solidity contract for deposit, submit, exit, challenge, withdraw and verification of application specific state transition.
 
 ### childchain
-- Entrypoint for childchain which interacts with ETH, RPC, DB, VM
+Child chain implementation using the core module.
+Collect transactions, verify these, generate a block and submit.
 
-### watcher
-- Observe childchain's merkle tree.
-- Clients' must see his own state on childchain via his local proof
-- Watcher will do some more complehensive watching but must be decentralized. See Tesuji Plasma.
+### wallet
+Wallet implementation.
+Responsibilities of wallet are calculating UTXOs,
+the interface of some methods for root chain(deposit, startExit, and challenge), and history verification.
 
 ## Development
 
 ### Install
 
 ```
-git clone git@github.com:cryptoeconomicslab/plasma-chamber.git
+git clone https://github.com/cryptoeconomicslab/plasma-chamber.git
 cd plasma-chamber
 mkdir .db
 yarn
@@ -42,6 +48,7 @@ yarn build
 Run all tests.
 
 ```
+yarn build //if you've been back from long vacation, because test runs for built sources :)
 yarn test
 ```
 

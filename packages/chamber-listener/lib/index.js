@@ -80,6 +80,9 @@ module.exports.run = childChain => {
     console.log('eventListener.Deposit', e.transactionHash);
     await childChain.applyDeposit(e);
   })
+  rootChainEventListener.getEvents('ExitStarted', RootChainConfirmationBlockNum, async (e) => {
+    await childChain.exitStarted(e);
+  })
   // rootChain.events.BlockSubmitted((e) => {
   //   console.log(e);
   // })

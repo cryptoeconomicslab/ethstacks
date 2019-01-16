@@ -1,5 +1,0 @@
-transfer([input], [newOwner], [output]) :-
-  isAddress(newOwner),
-  hasAsset(input, value),
-  hasAsset(output, value),
-  own(newOwner, output).

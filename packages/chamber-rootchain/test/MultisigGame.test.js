@@ -35,8 +35,8 @@ contract('MultisigGame', function ([user, owner, recipient, user4, user5]) {
     const seg2 = {start: CHUNK_SIZE, end: CHUNK_SIZE.times(2)};
     const p1 = Buffer.from('12345678ab', 'hex');
     const p2 = Buffer.from('ab12345678', 'hex');
-    const h1 = utils.sha3(p1);
-    const h2 = utils.sha3(p2);
+    const h1 = utils.keccak(p1);
+    const h2 = utils.keccak(p2);
 
     it('should verify multisig', async function () {
       const input1 = new TransactionOutput(
@@ -76,8 +76,8 @@ contract('MultisigGame', function ([user, owner, recipient, user4, user5]) {
     });
 
     it('should verify reveal', async function () {
-      const h1 = utils.sha3(p1);
-      const h2 = utils.sha3(p2);
+      const h1 = utils.keccak(p1);
+      const h2 = utils.keccak(p2);
       const input = new TransactionOutput(
         [testAddress1, testAddress2],
         [seg1, seg2],

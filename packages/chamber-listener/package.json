@@ -11,5 +11,8 @@
     "test": "echo \"Error: no test specified\" && exit 0"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "web3": "^1.0.0-beta.37"
+  }
 }

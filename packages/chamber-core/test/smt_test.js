@@ -6,7 +6,7 @@ describe('SparseMerkleTree', function() {
 
   describe('verify', function() {
 
-    const zeroHash = utils.sha3(0);
+    const zeroHash = utils.keccak(0);
 
     it('normal', function() {
       const leaves = Array.from(Array(Math.pow(2, 16)), () => null);

@@ -7,6 +7,7 @@ const {
   MockBigStorage
 } = require('./storage')
 const ChildChainApi = require('./childchain')
+const Web3EventListener = require('./event')
 const {
   Block,
   Constants,
@@ -30,6 +31,7 @@ class BaseWallet {
     this.bigStorage = options.bigStorage || new MockBigStorage()
     this.latestBlockNumber = 0;
     this.loadedBlockNumber = this.storage.load('loadedBlockNumber') || 0;
+    this.exitList = this.storage.load('exitList') || [];
   }
 
   setAddress(address) {
@@ -110,12 +112,12 @@ class BaseWallet {
   }
 
   async startExit(utxo) {
-    const tx = await this.getTransactions(utxo, 2)
+    const tx = await this.getTransactions(utxo)
     const txInfo = RLP.encode([tx.proof, tx.sigs, tx.confsig]);
 
-    return this.rootChainContract.methods.startExit(
+    const result = await this.rootChainContract.methods.startExit(
       tx.blkNum,
-      tx.index,
+      tx.outputIndex,
       utils.bufferToHex(tx.txBytes),
       utils.bufferToHex(txInfo)
     ).send({
@@ -123,8 +125,48 @@ class BaseWallet {
       gas: 600000,
       // Exit Bond
       // value: new BN("1000000000000000000")
-    })
+    });
+    const exitPos = tx.blkNum * 1000000 + utxo.getStartSlot(CHUNK_SIZE, 0);
+    this.exitList.push({
+      exitPos: exitPos,
+      utxo: utxo.toJson()
+    });
+    this.storage.store('exitList', this.exitList);
+    return result;
+  }
 
+  async getExit(exitPos) {
+    return await this.rootChainContract.methods.getExit(
+      exitPos
+    ).call({
+      from: this.address,
+      gas: 200000
+    });
+  }
+
+  async finalizeExit(exitPos) {
+    return await this.rootChainContract.methods.finalizeExits(
+      exitPos
+    ).send({
+      from: this.address,
+      gas: 500000
+    });
+  }
+
+  async challengeAfter(exitPos, utxo) {
+    const tx = await this.getTransactions(utxo)
+    const txInfo = RLP.encode([tx.proof, tx.sigs, tx.confsig]);
+
+    return await this.rootChainContract.methods.challengeAfter(
+      tx.inputIndex,
+      tx.blkNum,
+      exitPos,
+      utils.bufferToHex(tx.txBytes),
+      utils.bufferToHex(txInfo)
+    ).send({
+      from: this.address,
+      gas: 800000
+    });
   }
 
   getUTXOs() {
@@ -137,28 +179,31 @@ class BaseWallet {
     return this.bigStorage.searchProof(utxoKey);
   }
 
+  getExits() {
+    return this.exitList;
+  }
+
   // private methods
 
   /**
    * getTransactions
-   * @param {TransactionOutput} utxo 
-   * @param {Number} num 
+   * @param {TransactionOutput} utxo
    * @description get transactions by the UTXO
    */
-  async getTransactions(utxo, num) {
+  async getTransactions(utxo) {
     const slots = utxo.value.map(({start, end}) => {
       return TransactionOutput.amountToSlot(CHUNK_SIZE, start)
     })
     const history = await this.bigStorage.get(slots[0], utxo.blkNum)
     const tx = this.hexToTransaction(history.txBytes)
-    const index = this.getIndexOfOutput(tx, utxo)
     return {
       blkNum: history.blkNum,
       txBytes: tx.getBytes(),
       proof: Buffer.from(history.proof, 'hex'),
       sigs: tx.sigs[0],
       confsig: '',
-      index: index
+      inputIndex: this.getIndexOfInput(tx, utxo),
+      outputIndex: this.getIndexOfOutput(tx, utxo)
     }
   }
 
@@ -271,6 +316,16 @@ class BaseWallet {
     return block.createCoinProof(chunk).toString('hex')
   }
 
+  getIndexOfInput(tx, utxo) {
+    let index = 0
+    tx.inputs.map((input, i) => {
+      if(Buffer.compare(input.hash(), utxo.hash()) == 0) {
+        index = i
+      }
+    });
+    return index
+  }
+
   getIndexOfOutput(tx, utxo) {
     let index = 0
     tx.outputs.map((o, i) => {
@@ -283,6 +338,20 @@ class BaseWallet {
 
   hexToTransaction(txBytes) {
     return Transaction.fromBytes(Buffer.from(txBytes, 'hex'));
+  }
+
+  /**
+   * @name getEventListener
+   * @param {Object} options options.confirmation is number of blocks to confirm.
+   *     options.interval is interval for fetching events
+   */
+  getEventListener(options) {
+    return new Web3EventListener(
+      this.web3,
+      this.rootChainContract,
+      this.storage,
+      options
+    );
   }
 
 }

@@ -30,9 +30,9 @@ class SparseMerkleTree {
 
   createDefaultZeroHash(depth) {
     let defaultLayers = Array(depth + 1);
-    defaultLayers[0] = utils.sha3(0);
+    defaultLayers[0] = utils.keccak(0);
     for(let i = 1; i < depth + 1; i++) {
-      defaultLayers[i] = utils.sha3(Buffer.concat([defaultLayers[i-1], defaultLayers[i-1]]));
+      defaultLayers[i] = utils.keccak(Buffer.concat([defaultLayers[i-1], defaultLayers[i-1]]));
     }
     return defaultLayers;    
   }
@@ -46,7 +46,7 @@ class SparseMerkleTree {
     for(let i = 0; i < nodes.length; i += 2) {
       const left = nodes[i];
       const right = nodes[i + 1];
-      treeLevel.push(utils.sha3(Buffer.concat([left, right])));
+      treeLevel.push(utils.keccak(Buffer.concat([left, right])));
     }
 
     if(nodes.length % 2 === 1) {
@@ -93,7 +93,7 @@ class SparseMerkleTree {
     for(let i = 0; i < proof.length; i += 32) {
       const node = proof.slice(i, i + 32);
       const buf = (index % 2 === 0) ? ([hash, node]) : ([node, hash]);
-      hash = utils.sha3(Buffer.concat(buf));
+      hash = utils.keccak(Buffer.concat(buf));
       index = Math.floor(index / 2);
     }
 

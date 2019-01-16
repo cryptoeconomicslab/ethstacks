@@ -37,7 +37,7 @@ class Snapshot {
       }
     }).then(() => {
       return Promise.all(tx.outputs.map((o) => {
-        console.log('insert', o.toJson(), blkNum, o.hash(blkNum));
+        console.log('insert', o.toJson(), blkNum, o.getBytes(blkNum).toString('hex'), o.hash(blkNum).toString('hex'));
         return this.insertId(o.hash(blkNum));
       }));
     }).then(() => {

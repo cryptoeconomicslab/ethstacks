@@ -124,7 +124,7 @@ class TransactionOutput {
    * @dev get hash of TransactionOutput
    */
   hash(blkNum) {
-    return utils.sha3(this.getBytes(blkNum));
+    return utils.keccak(this.getBytes(blkNum));
   }
 
   clone() {
@@ -284,11 +284,11 @@ class Transaction {
     this.checkSigns();
     const txHash = this.hash();
     const buf = Buffer.concat([Buffer.from(txHash, 'hex')].concat(this.sigs));
-    return utils.sha3(buf);
+    return utils.keccak(buf);
   }
 
   hash() {
-    return utils.sha3(this.getBytes());
+    return utils.keccak(this.getBytes());
   }
 
   toJson() {

@@ -29,7 +29,7 @@ contract RootChain {
 
     event ExitStarted(
       address indexed exitor,
-      TxDecoder.TxState state
+      ExitTxo output
     );
 
     event BlockSubmitted(
@@ -631,6 +631,7 @@ contract RootChain {
     {
       uint256 _utxoPos = _blkNum * 1000000 + (_utxo.value[0].start / CHUNK_SIZE);
       uint256 exitableAt = Math.max(_created_at + 1 weeks, block.timestamp + 1 weeks);
+      ExitTxo memory output = getExitTxo(_utxo, _blkNum);
       exits[_utxoPos] = Exit({
         blkNum: _blkNum,
         exitableAt: exitableAt,
@@ -638,7 +639,9 @@ contract RootChain {
         output: getExitTxo(_utxo, _blkNum),
         challengeCount: 0
       });
-      emit ExitStarted(msg.sender, _utxo);
+      emit ExitStarted(
+        msg.sender,
+        output);
     }
 
     function getExitTxo(

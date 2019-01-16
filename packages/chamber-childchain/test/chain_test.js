@@ -147,4 +147,32 @@ describe('Chain', function() {
 
   });
 
+  describe('exitTxoToTransactionOutput()', function() {
+    const segment = {start:0, end:100000};
+    const privKey1 = testData.privKey1;
+    const testAddress1 = utils.privateToAddress(privKey1);
+    const output = new TransactionOutput(
+      [testAddress1],
+      [segment],
+      [0]
+    );
+    const blkNum = 10;
+
+    it('should success to get UTXO', async function() {
+      const exitTxo = {
+        output: [
+          [testAddress1],
+          ['0', '100000'],
+          '0xc1',
+          '10'
+        ]
+      };
+      assert.equal(
+        output.hash(blkNum).toString('hex'),
+        Chain.exitTxoToTransactionOutput(exitTxo).hash().toString('hex')
+      )
+    });
+
+  });
+
 });
