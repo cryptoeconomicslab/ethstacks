@@ -479,6 +479,14 @@ contract RootChain {
       }
     }
 
+    /**
+     * @dev challenge exiting double spend transaction by the tx between exiting tx and previous tx
+     *     see https://github.com/cryptoeconomicslab/plasma-chamber/pull/143
+     * @param _cInputIndex is spent txo's index of challenge transaction
+     * @param _rOutputIndex is spent txo's index of previous transaction which is showed in respondParent.
+     * @param _eUtxoPos is ID of exit
+     * @param _cPos is ID of challenge
+     */
     function challengeBetween(
       uint256 _cInputIndex,
       uint256 _rOutputIndex,
