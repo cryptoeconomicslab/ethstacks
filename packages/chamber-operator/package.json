@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@layer2/childchain": "^0.0.6",
+    "@layer2/childchain": "^0.0.12",
     "@layer2/core": "^0.0.5",
     "bignumber.js": "^8.0.1",
     "ethereumjs-util": "^5.2.0",

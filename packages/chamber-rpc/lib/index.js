@@ -24,6 +24,14 @@ module.exports.run = childChain => {
     getBlock: (args, cb) => {
       childChain.getBlock(args[0]).then((block) => {
         cb(null, block.serialize());
+      }).catch((e) => {
+        console.log(e.message)
+        if(e.message == 'NotFoundError') {
+          cb(null, null)
+        }else{
+          console.error(e)
+          cb(e)
+        }
       })
     }
   });

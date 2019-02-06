@@ -12,6 +12,7 @@ const abi = [
   'event BlockSubmitted(bytes32 _root, uint256 _timestamp, uint256 _blkNum)',
   'event Deposited(address indexed _depositer, uint256 _start, uint256 _end, uint256 _blkNum)',
   'event ExitStarted(address indexed _exitor, bytes32 _txHash, uint256 exitableAt, uint256 _start, uint256 _end)',
+  'function submit(bytes32 _root)',
   'function deposit() payable',
   'function exit(uint256 _utxoPos, uint256 _start, uint256 _end, bytes _txBytes, bytes _proof, bytes _sig) payable'
 ]
@@ -63,13 +64,13 @@ class ChainManager {
       try {
         if(this.chain.txQueue.length > 0) {
           const root = await this.chain.generateBlock();
-          const result = await this.rootChain.submitBlock(
-            root
-          ).send({
-            from: this.wallet.address,
-            gas: 200000
-          });
-          console.log(result.events.BlockSubmitted);
+          const result = await this.rootChain.submit(
+            root,
+            {
+              gasLimit: 200000
+            });
+          this.chain.txQueue = []
+          console.log(result);
         }
       } catch(e) {
         console.error(e)
