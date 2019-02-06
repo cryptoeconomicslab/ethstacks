@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@layer2/core": "^0.0.5",
+    "@layer2/core": "^0.0.12",
     "body-parser": "^1.18.3",
     "connect": "^3.6.6",
     "cors": "^2.8.4",

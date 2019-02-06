@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "@layer2/childchain": "^0.0.12",
-    "@layer2/core": "^0.0.5",
+    "@layer2/core": "^0.0.12",
     "bignumber.js": "^8.0.1",
     "ethereumjs-util": "^5.2.0",
     "ethers": "^4.0.23",

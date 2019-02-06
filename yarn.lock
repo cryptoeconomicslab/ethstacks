@@ -55,11 +55,11 @@
     ethereumjs-util "^5.2.0"
     rlp "^2.1.0"
 
-"@layer2/childchain@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@layer2/childchain/-/childchain-0.0.6.tgz#8307558548a02f0c31c64a90e75d24aad888dda4"
+"@layer2/childchain@^0.0.12":
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/@layer2/childchain/-/childchain-0.0.12.tgz#d4caa461ffcf6de58a388077a2112a5c0eba889f"
   dependencies:
-    "@layer2/core" "^0.0.6"
+    "@layer2/core" "^0.0.12"
     "@types/chai" "^4.1.7"
     "@types/mocha" "^5.2.5"
     chai "^4.2.0"
@@ -73,27 +73,9 @@
     ts-node "^7.0.1"
     typescript "^3.2.2"
 
-"@layer2/core@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@layer2/core/-/core-0.0.5.tgz#2e3e343fed3a275aa0eea98420b1926491ee16c0"
-  dependencies:
-    "@types/chai" "^4.1.7"
-    "@types/mocha" "^5.2.5"
-    "@types/node-fetch" "^2.1.4"
-    chai "^4.2.0"
-    chai-as-promised "^7.1.1"
-    chai-bignumber "^3.0.0"
-    ethers "^4.0.21"
-    istanbul "^0.4.5"
-    istanbul-coveralls "^1.0.3"
-    node-fetch "^2.3.0"
-    remap-istanbul "^0.13.0"
-    ts-node "^7.0.1"
-    typescript "^3.2.2"
-
-"@layer2/core@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@layer2/core/-/core-0.0.6.tgz#ec9112f2c4bbb82853864f7cef9f949e2954f907"
+"@layer2/core@^0.0.12":
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/@layer2/core/-/core-0.0.12.tgz#31cd1e4195b10f13042e69da09a6d5a46ebb52b7"
   dependencies:
     "@types/chai" "^4.1.7"
     "@types/mocha" "^5.2.5"
