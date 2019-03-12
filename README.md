@@ -29,20 +29,23 @@ chamber-operator is operating application for Plasma chain.
 ### Requirements
 
 * Node.JS v8.11.3 or higher
-* ganache-cli latest version
+* ganache-cli latest versionc
 * vyper 0.1.0b8
 
 ### Deploy contracts
 
 Run ganache with test mnemonic
-```
+```sh
 ganache-cli --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
 ```
 
 deploy contracts.
 
-```
+```sh
+npm i lerna -g
+npm i yarn -g
 git clone https://github.com/cryptoeconomicslab/chamber-packages
+lerna bootstrap
 cd packages/chamber-contracts
 yarn build
 truffle migrate --network local
@@ -50,7 +53,7 @@ truffle migrate --network local
 
 ### Run plasma chain
 
-```
+```sh
 git clone https://github.com/cryptoeconomicslab/plasma-chamber
 lerna bootstrap
 mkdir .db
@@ -59,7 +62,7 @@ yarn start
 
 ### Run wallet
 
-```
+```sh
 git clone https://github.com/cryptoeconomicslab/plasma-wallet
 yarn install
 yarn start
