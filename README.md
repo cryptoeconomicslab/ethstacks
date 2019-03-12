@@ -53,6 +53,7 @@ truffle migrate --network local
 ```
 git clone https://github.com/cryptoeconomicslab/plasma-chamber
 lerna bootstrap
+mkdir .db
 yarn start
 ```
 
