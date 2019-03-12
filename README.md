@@ -24,37 +24,44 @@ https://github.com/cryptoeconomicslab/chamber-packages
 
 chamber-operator is operating application for Plasma chain.
 
-## Development
+## Getting Started
 
-### Install
+### Requirements
+
+* Node.JS v8.11.3 or higher
+* ganache-cli latest version
+* vyper 0.1.0b8
+
+### Deploy contracts
+
+Run ganache with test mnemonic
+```
+ganache-cli --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
+```
+
+deploy contracts.
 
 ```
-git clone https://github.com/cryptoeconomicslab/plasma-chamber.git
-cd plasma-chamber
-mkdir .db
-yarn
-yarn bootstrap
+git clone https://github.com/cryptoeconomicslab/chamber-packages
+cd packages/chamber-contracts
 yarn build
+truffle migrate --network local
 ```
 
-### Test
-
-Run all tests.
+### Run plasma chain
 
 ```
-yarn build //if you've been back from long vacation, because test runs for built sources :)
-yarn test
+git clone https://github.com/cryptoeconomicslab/plasma-chamber
+lerna bootstrap
+yarn start
 ```
 
-### Test run
-
-Please deploy contracts by [chamber-contracts/README.md](https://github.com/cryptoeconomicslab/chamber-packages/blob/master/packages/chamber-contracts/README.md).
-
-Please deploy contracts by [chamber-contracts/README.md](https://github.com/cryptoeconomicslab/chamber-packages/blob/master/packages/chamber-contracts/README.md).
-
-Launch child chain.
+### Run wallet
 
 ```
-yarn run start
+git clone https://github.com/cryptoeconomicslab/plasma-wallet
+yarn install
+yarn start
 ```
 
+Open http://localhost:1234 in browser.
