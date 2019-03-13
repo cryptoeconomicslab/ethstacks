@@ -54,11 +54,19 @@ truffle migrate --network local
 ### Run plasma chain
 
 ```sh
-git clone https://github.com/cryptoeconomicslab/plasma-chamber
-lerna bootstrap
-mkdir .db
-yarn start
+cd packages/operator
+node -r dotenv/config lib/entry
 ```
+
+Or you can install global module
+
+```sh
+npm i @layer2/operator -g
+chamber-operator
+```
+
+You need envs described [here](https://github.com/cryptoeconomicslab/chamber-packages/tree/master/packages/operator#environment-variables)
+
 
 ### Run wallet
 
