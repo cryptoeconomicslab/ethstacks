@@ -6,9 +6,12 @@
 
 **This is experimental software, don't run in a production yet.**
 
+## Introdcution
+Plasma Chamber Cryptoeconomics Lab's first product that enables to generate General Purpose Plasma. Our implementation used Plasma Cash design as its basis, but support more complex transactions for each decentralized application without sacrificing its security.
+
 ## Overview
-Plasma Chamber is Cryptoeconomics Lab's first product that generates a specific Plasma infrastructure from Plasma specific language. Our implementation used Plasma Cash model as its basis, but support more complex transactions for each decentralized applicaiton without sacrificing security.
-Plasma is a 2nd layer scaling solution focused on throughput inprovement rather than quick finality. Plasma is not an EVM based, but UTXO-model based scaling solution inheritating Ethereum blockchain's security. In other words, it aims to give a perfect fund safety, a transaction compresssion, and no guarantee of stability. Plasma is often times expected to be applied to several kinds of Dapps such as games, asset exchanges, etc. However, it requires production teams to employ expertised Plasma researchers since careful security analysis is necessary to prepare its infrastructure. This causes duplicated research for each project, and security insights would not be shared sufficiently and efficiently among the projects. Hence, Plasma Chamber is implemented to be a Dapp building framework without requiring domain-specific Plasma for each project.
+Plasma is a 2nd layer scaling solution focusing on throughput improvement rather than quick finality. Plasma is not an EVM based, but UTXO-model based scaling solution inheriting Ethereum blockchain's security. In other words, it aims to give a perfect fund safety, a transaction compression, and no guarantee of stability. Plasma is often times expected to be applied to several kinds of Dapps such as games, asset exchanges, etc. However, it requires production teams to employ expert Plasma researchers since careful security analysis is necessary to prepare its infrastructure. This causes duplicated research for each project, and security insights would not be shared sufficiently and efficiently among the projects. Hence, Plasma Chamber is implemented to be a Dapp building framework without requiring domain-specific Plasma for each project.
+
 
 ## Plasma Chamber Design 
 This section descrives the protocol design used by Plasma Chamber, Cryptoeconomics Lab's first Plasma-based implementation. Plasma Cash model is the basis for the implemenation, but several modifications proposed later in Plasma Cashflow design are incorporated.
