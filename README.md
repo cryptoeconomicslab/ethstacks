@@ -100,7 +100,7 @@ Or you can install global module.
 
 ```sh
 npm i @layer2/operator -g
-chamber-operator
+layer2-operator
 ```
 
 Or use docker image.
