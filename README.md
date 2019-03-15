@@ -117,6 +117,7 @@ You need envs described [here](https://github.com/cryptoeconomicslab/chamber-pac
 ```sh
 git clone https://github.com/cryptoeconomicslab/plasma-wallet
 yarn install
+cp .env.example .env
 yarn start
 ```
 
