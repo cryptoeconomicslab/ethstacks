@@ -1,0 +1,3 @@
+[submodule "chamber-packages"]
+	path = chamber-packages
+	url = git@github.com:cryptoeconomicslab/chamber-packages.git
