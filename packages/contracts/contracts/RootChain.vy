@@ -29,6 +29,8 @@ struct Challenge:
   isAvailable: bool
   exitId: uint256
 
+# This construction is from Plasma Group's imeplementation
+# https://github.com/plasma-group/plasma-contracts/blob/master/contracts/PlasmaChain.vy#L6
 struct exitableRange:
   start: uint256
   isAvailable: bool
