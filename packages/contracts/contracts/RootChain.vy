@@ -246,6 +246,8 @@ def checkTransaction(
     _blkNum,
     _outputIndex)
 
+# checkExitable construction is from Plasma Group
+# https://github.com/plasma-group/plasma-contracts/blob/master/contracts/PlasmaChain.vy#L363
 @private
 @constant
 def checkExitable(
