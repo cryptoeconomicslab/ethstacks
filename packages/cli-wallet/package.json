@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc --build ./tsconfig.json",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 0"
   },
   "keywords": [
     "plasma"
@@ -13,7 +13,7 @@
   "author": "Cryptoeconomics Lab",
   "license": "Apache-2.0",
   "dependencies": {
-    "@layer2/wallet": "^0.0.36",
+    "@layer2/wallet": "^0.0.37",
     "@types/leveldown": "^4.0.0",
     "@types/levelup": "^3.1.0",
     "level": "^5.0.1",

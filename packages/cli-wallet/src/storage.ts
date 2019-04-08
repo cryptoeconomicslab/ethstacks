@@ -22,19 +22,17 @@ export class FileStorage implements IStorage {
     this.actions = new Map<number, string>()
   }
 
-  add(key: string, value: string): boolean {
-    fs.writeFileSync(path.join(this.path, key), value)
-    //await this.db.put(key, value)
+  async set(key: string, value: string): Promise<boolean> {
+    await this.db.put(key, value)
     return true
   }
-  get(key: string): string {
-    const value = fs.readFileSync(path.join(this.path, key))
-    //const value = await this.db.get(key)
+  async get(key: string): Promise<string> {
+    const value = await this.db.get(key)
     if(value) return String(value)
     else throw new Error(`key ${key} not found`)
   }
-  delete(key: string): boolean {
-    // await this.db.del(key)
+  async delete(key: string): Promise<boolean> {
+    await this.db.del(key)
     return true
   }
   async addProof(key: string, blkNum: number, value: string): Promise<boolean> {

@@ -1,38 +1,27 @@
 import {
   ChamberWallet,
   JsonRpcClient,
-  PlasmaClient
+  PlasmaClient,
+  WalletMQTTClient
 } from '@layer2/wallet'
 import { FileStorage } from './storage'
 import fs from 'fs'
 import path from 'path'
 import { utils } from 'ethers'
 
-class WalletMQTTClient {
-
-  constructor(endpoint: string) {
+function getPrivateKey(): string {
+  const privateKey = process.env.PRIVATE_KEY
+  if(privateKey) {
+    return privateKey
+  } else {
+    throw new Error('private key nor defined')
   }
-
-  publish(
-    topic: string,
-    message: string
-  ) {
-    return true
-  }
-
-  subscribe(
-    topic: string,
-    handler: (message: string) => void
-  ) {
-  }
-
 }
-
 
 const childChainEndpoint = process.env.CHILDCHAIN_ENDPOINT || 'http://localhost:3000'
 const jsonRpcClient = new JsonRpcClient(childChainEndpoint)
 const client = new PlasmaClient(jsonRpcClient, new WalletMQTTClient(process.env.CHILDCHAIN_PUBSUB_ENDPOINT || childChainEndpoint))
-const privateKey = '0x0dbbe8e4ae425a6d2687f1a7e3ba17bc98c673636790f1b8ad91193c05875ef1'
+const privateKey = getPrivateKey()
 const address = utils.computeAddress(privateKey)
 const options = {
   // kovan
@@ -55,7 +44,6 @@ const wallet = ChamberWallet.createWalletWithPrivateKey(
   options
 )
 
-console.log(process.argv)
 const cmd = process.argv[2]
 
 if(cmd) {
