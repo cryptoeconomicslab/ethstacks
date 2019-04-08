@@ -16,27 +16,42 @@ export class WalletStorage {
 
   constructor(storage: IStorage) {
     this.storage = storage
-    this.tokens = this.loadTokens()
-    this.utxos = this.loadUTXO()
-    this.exitList = this.loadExits()
+    this.tokens = []
+    this.utxos = new Map<string, string>()
+    this.exitList = new Map<string, string>()
+  }
+
+  async init() {
+    this.tokens = await this.loadTokens()
+    this.utxos = await this.loadUTXO()
+    this.exitList = await this.loadExits()
   }
 
   getStorage() {
     return this.storage
   }
 
-  getLoadedPlasmaBlockNumber(): number {
+  private async get(key: string, defaultValue: any): Promise<any> {
     try {
-      return Number(this.storage.get('loadedBlockNumber'))
+      const value = await this.storage.get(key)
+      return JSON.parse(value)
     } catch(e) {
-      return 0
+      return defaultValue
     }
   }
 
-  setLoadedPlasmaBlockNumber(n: number) {
-    this.storage.add('loadedBlockNumber', n.toString())
+  private async set(key: string, value: any) {
+    return this.storage.set(key, JSON.stringify(value))
   }
-  
+
+  async getLoadedPlasmaBlockNumber(): Promise<number> {
+    return this.get('loadedBlockNumber', 0)
+  }
+
+  async setLoadedPlasmaBlockNumber(n: number) {
+    await this.set('loadedBlockNumber', n)
+  }
+
   addUTXO(tx: SignedTransactionWithProof) {
     this.utxos.set(tx.getOutput().hash(), JSON.stringify(tx.serialize()))
     this.storeMap('utxos', this.utxos)
@@ -45,33 +60,27 @@ export class WalletStorage {
   /**
    * @ignore
    */
-  private loadTokens(): TokenType[] {
-    let tokens = []
-    try {
-      tokens = JSON.parse(this.storage.get('tokens'))
-    } catch(e) {
-      tokens = []
-    }
-    if(!Array.isArray(tokens)) tokens = []
-    return tokens
+  private async loadTokens(): Promise<TokenType[]> {
+    this.tokens = await this.get('tokens', [])
+    return this.tokens
   }
 
   getTokens(): TokenType[] {
     return this.tokens
   }
 
-  addToken(id: number, address: string) {
+  async addToken(id: number, address: string) {
     this.tokens[id] = {
       id: id,
       address: address
     }
-    this.storage.add('tokens', JSON.stringify(this.tokens))
+    await this.set('tokens', this.tokens)
   }
   
   /**
    * @ignore
    */
-  private loadUTXO() {
+  private async loadUTXO() {
     return this.loadMap<string>('utxos')
   }
 
@@ -119,20 +128,16 @@ export class WalletStorage {
   /**
    * @ignore
    */
-  private loadExits() {
+  private async loadExits() {
     return this.loadMap<string>('exits')
   }
 
   /**
    * @ignore
    */
-  loadExitableRangeManager() {
-    try {
-      const loaded = this.storage.get('exitable')
-      return ExitableRangeManager.deserialize(loaded)
-    }catch(e) {
-      return new ExitableRangeManager()
-    }
+  async loadExitableRangeManager() {
+    const exitable = await this.get('exitable', [])
+    return ExitableRangeManager.deserialize(exitable)
   }
 
   /**
@@ -141,19 +146,15 @@ export class WalletStorage {
   saveExitableRangeManager(
     exitableRangeManager: ExitableRangeManager
   ) {
-    this.storage.add('exitable', exitableRangeManager.serialize())
+    this.set('exitable', exitableRangeManager.serialize())
   }
 
   storeMap<T>(key: string, map: Map<string, T>) {
-    this.storage.add(key, JSON.stringify(MapUtil.serialize<T>(map)))
+    this.set(key, MapUtil.serialize<T>(map))
   }
   
-  loadMap<T>(key: string) {
-    try {
-      return MapUtil.deserialize<T>(JSON.parse(this.storage.get(key)))
-    } catch (e) {
-      return MapUtil.deserialize<T>({})
-    }
+  async loadMap<T>(key: string) {
+    return MapUtil.deserialize<T>(await this.get(key, {}))
   }
 
   async addUserAction(blkNum: number, action: UserAction) {

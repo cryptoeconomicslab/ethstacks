@@ -6,7 +6,8 @@ import { MockStorage } from "../src/storage/MockStorage";
 import {
   INetworkClient,
   IPubsubClient,
-  PlasmaClient
+  PlasmaClient,
+  SubscribeHandler
 } from '../src/client'
 import { assert } from "chai"
 import { constants, utils } from "ethers"
@@ -26,7 +27,12 @@ class MockPubsubClient implements IPubsubClient {
   }
   subscribe(
     topic: string,
-    event: (e: any) => void
+    event: SubscribeHandler
+  ): void {
+  }
+  unsubscribe(
+    topic: string,
+    handler: SubscribeHandler
   ): void {
   }
 }

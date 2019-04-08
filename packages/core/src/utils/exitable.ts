@@ -7,24 +7,31 @@ export class ExitableRangeManager {
 
   constructor() {
     this.ranges = []
-    this.ranges.push(new Segment(
-      utils.bigNumberify(0),
-      utils.bigNumberify(0),
-      utils.bigNumberify(0)))
+    this.ranges.push(ExitableRangeManager.emptyRange())
   }
 
   withRanges(ranges: Segment[]) {
     this.ranges = ranges
+    if(this.ranges.length == 0) {
+      // if ranges has no item, push empty range
+      this.ranges.push(ExitableRangeManager.emptyRange())
+    }
     return this
   }
 
-  static deserialize(str: string) {
-    const arr: any[] = JSON.parse(str)
+  static emptyRange() {
+    return new Segment(
+      utils.bigNumberify(0),
+      utils.bigNumberify(0),
+      utils.bigNumberify(0))
+  }
+
+  static deserialize(arr: any[]) {
     return new ExitableRangeManager().withRanges(arr.map(s => Segment.deserialize(s)))
   }
 
   serialize() {
-    return JSON.stringify(this.ranges.map(range => range.serialize()))
+    return this.ranges.map(range => range.serialize())
   }
 
   insert(tokenId: BigNumber, start: BigNumber, end: BigNumber) {

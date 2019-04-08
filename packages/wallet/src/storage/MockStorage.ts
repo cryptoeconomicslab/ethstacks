@@ -14,18 +14,18 @@ export class MockStorage implements IStorage {
     this.actions = new Map<number, string>()
   }
 
-  add(key: string, value: string): boolean {
+  set(key: string, value: string): Promise<boolean> {
     this.data.set(key, value)
-    return true
+    return Promise.resolve(true)
   }
-  get(key: string): string {
+  get(key: string): Promise<string> {
     const value = this.data.get(key)
-    if(value) return value
-    else throw new Error(`key ${key} not found`)
+    if(value) return Promise.resolve(value)
+    else throw new Error(`$key {key} not found`)
   }
-  delete(key: string): boolean {
+  delete(key: string): Promise<boolean> {
     this.data.delete(key)
-    return true
+    return Promise.resolve(true)
   }
   addProof(key: string, blkNum: number, value: string): Promise<boolean> {
     console.log(value)

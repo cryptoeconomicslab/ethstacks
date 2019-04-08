@@ -56,7 +56,7 @@ export class SegmentChecker {
   isContain(tx: SignedTransaction): boolean {
     return tx.getAllInputs().reduce((isContain, i) => {
       return isContain && this._isContain(i)
-    }, true)
+    }, <boolean>true)
   }
 
   spend(tx: SignedTransaction) {

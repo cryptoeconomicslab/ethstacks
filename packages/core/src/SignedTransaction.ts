@@ -50,7 +50,7 @@ export class SignedTransaction {
   verify(): boolean {
     return this.txs.reduce((isVerified, tx) => {
       return isVerified && tx.verify(this.signatures, this.getTxHash())
-    }, true)
+    }, <boolean>true)
   }
   
   /**

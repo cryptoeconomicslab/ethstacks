@@ -5,7 +5,8 @@ import {
 import {
   INetworkClient,
   IPubsubClient,
-  PlasmaClient
+  PlasmaClient,
+  SubscribeHandler
 } from '../src/client'
 
 import { assert } from "chai"
@@ -24,10 +25,16 @@ class MockPubsubClient implements IPubsubClient {
   }
   subscribe(
     topic: string,
-    event: (e: any) => void
+    event: SubscribeHandler
+  ): void {
+  }
+  unsubscribe(
+    topic: string,
+    handler: SubscribeHandler
   ): void {
   }
 }
+
 
 describe('ChamberWallet', () => {
 
@@ -72,7 +79,6 @@ describe('ChamberWallet', () => {
         utils.bigNumberify(10000000),
         utils.bigNumberify(2)
       )
-      console.log(wallet.getUTXOArray())
       assert.equal(wallet.getBalance().toNumber(), 10000000)
     })
     

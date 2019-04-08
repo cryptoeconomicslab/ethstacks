@@ -1,6 +1,6 @@
 {
   "name": "@layer2/operator",
-  "version": "0.0.36",
+  "version": "0.0.37",
   "publishConfig": {
     "access": "public"
   },
@@ -38,9 +38,9 @@
     "url": "https://github.com/cryptoeconomicslab/chamber-packages/issues"
   },
   "dependencies": {
-    "@layer2/childchain": "^0.0.36",
-    "@layer2/core": "^0.0.36",
-    "@layer2/events-watcher": "^0.0.36",
+    "@layer2/childchain": "^0.0.37",
+    "@layer2/core": "^0.0.37",
+    "@layer2/events-watcher": "^0.0.37",
     "body-parser": "^1.18.3",
     "connect": "^3.6.6",
     "cors": "^2.8.5",

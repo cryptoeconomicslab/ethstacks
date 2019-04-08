@@ -56,14 +56,14 @@ const ERC20abi = [
 
 export class ChamberWallet extends EventEmitter {
   private client: PlasmaClient
-  private loadedBlockNumber: number
+  private loadedBlockNumber: number = 0
   private rootChainContract: Contract
   private wallet: ethers.Wallet
   private storage: WalletStorage
   private httpProvider: ethers.providers.JsonRpcProvider
   private listener: EventWatcher
   private rootChainInterface: ethers.utils.Interface
-  private exitableRangeManager: ExitableRangeManager
+  private exitableRangeManager: ExitableRangeManager = new ExitableRangeManager()
   private plasmaSyncher: PlasmaSyncher
   private options: any
   private segmentHistoryManager: SegmentHistoryManager
@@ -162,7 +162,6 @@ export class ChamberWallet extends EventEmitter {
     this.wallet = wallet
     this.rootChainContract = contract.connect(this.wallet)
     this.storage = new WalletStorage(storage)
-    this.loadedBlockNumber = this.storage.getLoadedPlasmaBlockNumber()
     this.rootChainInterface = new ethers.utils.Interface(artifact.abi)
     this.plasmaSyncher = new PlasmaSyncher(
       client,
@@ -208,8 +207,6 @@ export class ChamberWallet extends EventEmitter {
         e.values._blkNum
       )
     })
-
-    this.exitableRangeManager = this.storage.loadExitableRangeManager()
     this.segmentHistoryManager = new SegmentHistoryManager(storage, this.client)
     this.plasmaSyncher.on('PlasmaBlockHeaderAdded', (e: any) => {
       this.segmentHistoryManager.appendBlockHeader(e.blockHeader as WaitingBlockWrapper)
@@ -225,6 +222,9 @@ export class ChamberWallet extends EventEmitter {
    * ```
    */
   async init() {
+    await this.storage.init()
+    this.exitableRangeManager = await this.storage.loadExitableRangeManager()
+    this.loadedBlockNumber = await this.storage.getLoadedPlasmaBlockNumber()
     if(this.isMerchant) {
       this.client.subscribeFastTransfer(this.getAddress(), async (tx) => {
         await this.sendFastTransferToOperator(tx)

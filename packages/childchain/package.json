@@ -1,6 +1,6 @@
 {
   "name": "@layer2/childchain",
-  "version": "0.0.36",
+  "version": "0.0.37",
   "main": "dist/index.js",
   "publishConfig": {
     "access": "public"
@@ -24,7 +24,7 @@
     "docs": "typedoc --out ../../docs/childchain ./src"
   },
   "dependencies": {
-    "@layer2/core": "^0.0.36",
+    "@layer2/core": "^0.0.37",
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
     "@types/mocha": "^5.2.5",
