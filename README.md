@@ -91,7 +91,7 @@ deploy contracts.
 
 ```sh
 npm i lerna yarn -g
-git clone https://github.com/cryptoeconomicslab/plasma-chamber
+git clone https://github.com/cryptoeconomicslab/plasma-chamber -b v0.0.39
 cd plasma-chamber 
 lerna bootstrap
 cd packages/contracts
@@ -110,7 +110,7 @@ node -r dotenv/config lib/entry
 Or you can install global module.
 
 ```sh
-npm i @layer2/operator -g
+npm i @layer2/operator@v0.0.39 -g
 ROOTCHAIN_ENDPOINT=http://127.0.0.1:8545 ROOTCHAIN_ADDRESS=0xb9A219631Aed55eBC3D998f17C3840B7eC39C0cc OPERATOR_PRIVATE_KEY=0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3 layer2-operator
 ```
 
