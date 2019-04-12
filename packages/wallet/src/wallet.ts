@@ -33,6 +33,8 @@ import { PlasmaSyncher } from './client/PlasmaSyncher'
 import { StateManager } from './StateManager'
 import artifact from './assets/RootChain.json'
 import { SegmentHistoryManager } from './history/SegmentHistory';
+import { DefragAlgorithm } from './storategy/defrag'
+import { TransferAlgorithm } from './storategy/transfer';
 if(!artifact.abi) {
   console.error('ABI not found')
 }
@@ -582,91 +584,29 @@ export class ChamberWallet extends EventEmitter {
     feeTo?: Address,
     fee?: BigNumber
   ): SignedTransaction | null {
-    let tx: SignedTransaction | null = null
-    const targetBlock = ethers.utils.bigNumberify(this.getTargetBlockNumber())
-    this.getUTXOArray()
-    .filter(_tx => _tx.getOutput().getSegment().getTokenId().eq(tokenId))
-    .forEach((_tx) => {
-      const output = _tx.getOutput()
-      const segment = output.getSegment()
-      const sum = amount.add(fee || 0)
-      if(segment.getAmount().gte(sum)) {
-        const paymentTx = OwnershipPredicate.create(
-          new Segment(segment.getTokenId(), segment.start, segment.start.add(amount)),
-          targetBlock,
-          this.predicatesManager.getNativePredicate('OwnershipPredicate'),
-          to)
-        if(feeTo && fee) {
-          const feeStart = segment.start.add(amount)
-          const feeTx = OwnershipPredicate.create(
-            new Segment(segment.getTokenId(), feeStart, feeStart.add(fee)),
-            targetBlock,
-            this.predicatesManager.getNativePredicate('OwnershipPredicate'),
-            feeTo)
-          tx = new SignedTransaction([paymentTx, feeTx])
-        } else {
-          tx = new SignedTransaction([paymentTx])
-        }
-      }
-    })
-    return tx
-  }
-
-  searchMergable(blkNum: BigNumber): StateUpdate | null {
-    let tx = null
-    let segmentEndMap = new Map<string, SignedTransactionWithProof>()
-    this.getUTXOArray().forEach((_tx) => {
-      const segment = _tx.getOutput().getSegment()
-      const start = segment.start.toString()
-      const end = segment.end.toString()
-      const tx2 = segmentEndMap.get(start)
-      if(tx2) {
-        // _tx and segmentStartMap.get(start) are available for merge transaction
-        tx = OwnershipPredicate.create(
-          _tx.getOutput().getSegment().add(tx2.getOutput().getSegment()),
-          blkNum,
-          this.predicatesManager.getNativePredicate('OwnershipPredicate'),
-          this.wallet.address
-        )
-      }
-      segmentEndMap.set(end, _tx)
-    })
-    return tx
+    return TransferAlgorithm.searchUtxo(
+      this.getUTXOArray(),
+      this.getTargetBlockNumber(),
+      this.predicatesManager.getNativePredicate('OwnershipPredicate'),
+      to,
+      tokenId,
+      amount,
+      feeTo,
+      fee
+    )
   }
 
   /**
-   * @ignore
+   * searchMergable search mergable stateUpdates
+   * @param targetBlockNumber is target block number
    */
-  private makeSwapRequest(): SwapRequest | null {
-    let swapRequest = null
-    this.getUTXOArray().forEach((txNeighbor) => {
-      const neighbor = txNeighbor.getOutput().getSegment()
-      const txs = this.searchHole(neighbor)
-      if(txs.length > 0) {
-        const output = txs[0].getOutput()
-        swapRequest = new SwapRequest(
-          output.getOwner(),
-          output.getBlkNum(),
-          output.getSegment(),
-          txNeighbor.getOutput().getBlkNum(),
-          neighbor)
-      }
-    })
-    return swapRequest
-  }
-
-  private searchHole(neighbor: Segment) {
-    return this.getUTXOArray().filter((_tx) => {
-      const segment = _tx.getOutput().getSegment()
-      return neighbor.end.lt(segment.start)
-    })
-  }
-
-  private searchNeighbors(swapRequest: SwapRequest): StateUpdate[] {
-    return this.getUTXOArray().filter((_tx) => {
-      const segment = _tx.getOutput().getSegment()
-      return swapRequest.check(segment)
-    }).map(s => s.getOutput())
+  searchMergable(targetBlockNumber: BigNumber): StateUpdate | null {
+    return DefragAlgorithm.searchMergable(
+      this.getUTXOArray(),
+      targetBlockNumber,
+      this.predicatesManager.getNativePredicate('OwnershipPredicate'),
+      this.wallet.address
+    )
   }
 
   private checkSwapTx(swapTx: SignedTransaction) {
@@ -779,7 +719,7 @@ export class ChamberWallet extends EventEmitter {
   }
 
   async swapRequest() {
-    const swapRequest = this.makeSwapRequest()
+    const swapRequest = DefragAlgorithm.makeSwapRequest(this.getUTXOArray())
     if(swapRequest) {
       return this.client.swapRequest(swapRequest)
     } else {
@@ -795,7 +735,7 @@ export class ChamberWallet extends EventEmitter {
       return new ChamberResultError(WalletErrorFactory.SwapRequestError())
     }
     const tasks = swapRequests.ok().map((swapRequest) => {
-      const neighbors = this.searchNeighbors(swapRequest)
+      const neighbors = DefragAlgorithm.searchNeighbors(this.getUTXOArray(), swapRequest)
       const neighbor = neighbors[0]
       if(neighbor) {
         swapRequest.setTarget(neighbor)
