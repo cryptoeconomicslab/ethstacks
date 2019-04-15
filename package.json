@@ -18,7 +18,7 @@
     "build": "lerna run build",
     "test": "lerna run test",
     "build:ci": "lerna run build:ci",
-    "test:ci": "lerna run test:ci",
+    "test:ci": "lerna run test:ci && istanbul-merge --out coverage/coverage.json packages/core/coverage/coverage.json packages/wallet/coverage/coverage.json packages/childchain/coverage/coverage.json && remap-istanbul -i coverage/coverage.json -o coverage/lcov.info -t lcovonly && istanbul-coveralls",
     "format": "lerna run format",
     "publish": "yarn build && lerna publish",
     "start": "node app",
@@ -27,5 +27,10 @@
   },
   "dependencies": {
     "lerna": "^3.10.5"
+  },
+  "devDependencies": {
+    "istanbul-merge": "^1.1.1",
+    "istanbul-coveralls": "^1.0.3",
+    "remap-istanbul": "^0.13.0"
   }
 }

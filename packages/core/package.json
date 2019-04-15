@@ -20,7 +20,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "mocha -r ts-node/register 'test/**/*.ts'",
     "pretest:ci": "tsc --build ./tsconfig-ci.json",
-    "test:ci": "yarn run pretest:ci && istanbul cover _mocha -- 'dist-ci/test/**/*.js' && remap-istanbul -i coverage/coverage.json -o coverage/lcov.info -t lcovonly && istanbul-coveralls",
+    "test:ci": "yarn run pretest:ci && istanbul cover _mocha -- 'dist-ci/test/**/*.js'",
     "docs": "typedoc --out ../../docs/core ./src"
   },
   "dependencies": {
@@ -30,9 +30,7 @@
     "@types/node-fetch": "^2.1.4",
     "ethers": "^4.0.27",
     "istanbul": "^0.4.5",
-    "istanbul-coveralls": "^1.0.3",
     "node-fetch": "^2.3.0",
-    "remap-istanbul": "^0.13.0",
     "ts-node": "^7.0.1",
     "tslib": "^1.9.3",
     "typescript": "^3.2.2"
