@@ -5,13 +5,15 @@ import {
   ChamberResultError,
   SignedTransaction,
   Block,
-  PredicatesManager, OwnershipPredicate, Address,
+  PredicatesManager,
+  OwnershipPredicate,
+  Address,
   Segment,
   StateManager,
   SignedTransactionWithProof
 } from '@layer2/core'
 import { ChainErrorFactory } from './error'
-import { constants, utils } from 'ethers';
+import { constants, utils } from 'ethers'
 import BigNumber = utils.BigNumber
 import { SwapManager } from './SwapManager'
 
@@ -23,23 +25,25 @@ export interface IChainDb {
 }
 
 export class Chain {
-  blockHeight: number
-  db: IChainDb
-  txQueue: SignedTransaction[]
-  txFilter: TxFilter
-  numTokens: number
-  swapManager: SwapManager
-  segmentChecker: StateManager
-  predicatesManager: PredicatesManager
-  ownershipPredicateAddress: Address
+  public blockHeight: number
+  public db: IChainDb
+  public txQueue: SignedTransaction[]
+  public txFilter: TxFilter
+  public numTokens: number
+  public swapManager: SwapManager
+  public segmentChecker: StateManager
+  public predicatesManager: PredicatesManager
+  public ownershipPredicateAddress: Address
 
-  constructor(
-    db: IChainDb,
-    options: any
-  ) {
+  constructor(db: IChainDb, options: any) {
     this.predicatesManager = new PredicatesManager()
-    this.predicatesManager.addPredicate(options.OwnershipPredicate, 'OwnershipPredicate')
-    this.ownershipPredicateAddress = this.predicatesManager.getNativePredicate('OwnershipPredicate')
+    this.predicatesManager.addPredicate(
+      options.OwnershipPredicate,
+      'OwnershipPredicate'
+    )
+    this.ownershipPredicateAddress = this.predicatesManager.getNativePredicate(
+      'OwnershipPredicate'
+    )
     this.segmentChecker = new StateManager(this.predicatesManager)
     this.blockHeight = 0
     this.db = db
@@ -49,25 +53,25 @@ export class Chain {
     this.swapManager = new SwapManager()
   }
 
-  setNumTokens(numTokens: number) {
+  public setNumTokens(numTokens: number) {
     this.numTokens = numTokens
   }
 
-  getSwapManager() {
+  public getSwapManager() {
     return this.swapManager
   }
 
-  getCurrentSegments() {
+  public getCurrentSegments() {
     return this.segmentChecker.toObject()
   }
 
-  appendTx(tx: SignedTransaction): ChamberResult<boolean> {
+  public appendTx(tx: SignedTransaction): ChamberResult<boolean> {
     try {
       const result = this.txFilter.checkAndInsertTx(tx)
-      if(result.isError()) {
+      if (result.isError()) {
         return result
       }
-      if(!this.segmentChecker.isContain(tx)) {
+      if (!this.segmentChecker.isContain(tx)) {
         return new ChamberResultError(ChainErrorFactory.InvalidTransaction())
       }
       this.txQueue.push(tx)
@@ -78,9 +82,9 @@ export class Chain {
     }
   }
 
-  async updateConfSig(tx: SignedTransactionWithProof) {
+  public async updateConfSig(tx: SignedTransactionWithProof) {
     const result = await this.getBlock(tx.blkNum)
-    if(result.isOk()) {
+    if (result.isOk()) {
       const block = result.ok()
       tx.confSigs.map(confSig => {
         block.appendConfSig(tx.getSignedTx(), confSig)
@@ -89,23 +93,23 @@ export class Chain {
     }
   }
 
-  isEmpty() {
+  public isEmpty() {
     return this.txQueue.length == 0
   }
-  
-  async generateBlock(): Promise<ChamberResult<string>> {
+
+  public async generateBlock(): Promise<ChamberResult<string>> {
     const numToken = await this.readNumToken()
     const block = new Block(numToken)
-    if(this.txQueue.length == 0) {
+    if (this.txQueue.length == 0) {
       return new ChamberResultError(ChainErrorFactory.NoValidTransactions())
     }
     const tasks = this.txQueue.map(async tx => {
-      if(this.segmentChecker.spend(tx).length > 0) {
+      if (this.segmentChecker.spend(tx).length > 0) {
         block.appendTx(tx)
       }
     })
     await Promise.all(tasks)
-    if(block.getTransactions().length == 0) {
+    if (block.getTransactions().length == 0) {
       return new ChamberResultError(ChainErrorFactory.NoValidTransactions())
     }
     // write to DB
@@ -115,18 +119,22 @@ export class Chain {
     return new ChamberOk(root)
   }
 
-  clear() {
+  public clear() {
     this.txQueue = []
     this.txFilter.clear()
   }
 
-  async handleListingEvent(tokenId: BigNumber, tokenAddress: string) {
+  public async handleListingEvent(tokenId: BigNumber, tokenAddress: string) {
     this.numTokens = tokenId.toNumber() + 1
     await this.db.insert('numTokens', JSON.stringify(this.numTokens))
-
   }
 
-  async handleSubmit(superRoot: string, root: string, blkNum: BigNumber, timestamp: BigNumber) {
+  public async handleSubmit(
+    superRoot: string,
+    root: string,
+    blkNum: BigNumber,
+    timestamp: BigNumber
+  ) {
     const block = await this.readWaitingBlock(root)
     block.txs.forEach(tx => {
       this.segmentChecker.insert(tx)
@@ -139,13 +147,15 @@ export class Chain {
     await this.writeSnapshot()
   }
 
-  async handleDeposit(depositor: string, tokenId: BigNumber, start: BigNumber, end: BigNumber, blkNum: BigNumber) {
+  public async handleDeposit(
+    depositor: string,
+    tokenId: BigNumber,
+    start: BigNumber,
+    end: BigNumber,
+    blkNum: BigNumber
+  ) {
     const depositTx = OwnershipPredicate.create(
-      new Segment(
-        tokenId,
-        start,
-        end
-      ),
+      new Segment(tokenId, start, end),
       blkNum,
       this.ownershipPredicateAddress,
       depositor
@@ -160,7 +170,7 @@ export class Chain {
     await this.writeSnapshot()
   }
 
-  async handleExit(
+  public async handleExit(
     exitor: string,
     segment: BigNumber,
     blkNum: BigNumber
@@ -169,77 +179,90 @@ export class Chain {
     await this.writeSnapshot()
   }
 
-
-  async getBlock(blkNum: BigNumber): Promise<ChamberResult<Block>> {
+  public async getBlock(blkNum: BigNumber): Promise<ChamberResult<Block>> {
     try {
       const block = await this.readFromDb(blkNum)
       return new ChamberOk(block)
-    } catch(e) {
+    } catch (e) {
       return new ChamberResultError(ChainErrorFactory.BlockNotFound())
     }
   }
 
-  async getUserTransactions(blkNum: BigNumber, owner: string): Promise<ChamberResult<SignedTransactionWithProof[]>> {
+  public async getUserTransactions(
+    blkNum: BigNumber,
+    owner: string
+  ): Promise<ChamberResult<SignedTransactionWithProof[]>> {
     const block = await this.getBlock(blkNum)
-    if(block.isOk()) {
-      return new ChamberOk(block.ok().getUserTransactionAndProofs(owner, this.predicatesManager))
+    if (block.isOk()) {
+      return new ChamberOk(
+        block.ok().getUserTransactionAndProofs(owner, this.predicatesManager)
+      )
     } else {
       return new ChamberResultError(block.error())
     }
   }
 
-  async writeWaitingBlock(root: string, block: Block) {
-    await this.db.insert('waitingblock.' + root, JSON.stringify(block.serialize()))
+  public async writeWaitingBlock(root: string, block: Block) {
+    await this.db.insert(
+      'waitingblock.' + root,
+      JSON.stringify(block.serialize())
+    )
   }
 
-  async readWaitingBlock(root: string) {
+  public async readWaitingBlock(root: string) {
     const str = await this.db.get('waitingblock.' + root)
     return Block.deserialize(JSON.parse(str))
   }
 
-  async writeToDb(block: Block) {
-    await this.db.insert('block.' + block.getBlockNumber().toString(), JSON.stringify(block.serialize()))
+  public async writeToDb(block: Block) {
+    await this.db.insert(
+      'block.' + block.getBlockNumber().toString(),
+      JSON.stringify(block.serialize())
+    )
   }
 
-  async readFromDb(blkNum: BigNumber) {
+  public async readFromDb(blkNum: BigNumber) {
     const str = await this.db.get('block.' + blkNum.toString())
     return Block.deserialize(JSON.parse(str))
   }
 
-  async writeSnapshot() {
-    await this.db.insert('snapshot', JSON.stringify(this.segmentChecker.serialize()))
+  public async writeSnapshot() {
+    await this.db.insert(
+      'snapshot',
+      JSON.stringify(this.segmentChecker.serialize())
+    )
   }
 
-  async readSnapshot() {
+  public async readSnapshot() {
     const snapshot = await this.db.get('snapshot')
     this.segmentChecker.deserialize(JSON.parse(snapshot))
   }
 
-  async readNumToken() {
+  public async readNumToken() {
     const numTokens = await this.db.get('numTokens')
     try {
       this.numTokens = JSON.parse(numTokens)
-    } catch(e) {
-      this.numTokens = 1      
+    } catch (e) {
+      this.numTokens = 1
     }
     return this.numTokens
   }
 
-  async syncBlocks() {
+  public async syncBlocks() {
     await this.syncBlocksPart(utils.bigNumberify(3), false)
   }
 
   private async syncBlocksPart(blkNum: BigNumber, prevDoesExist: boolean) {
     const doesExist = await this.syncBlock(blkNum)
     // deposit block or submit block is exists
-    if(prevDoesExist || doesExist) {
+    if (prevDoesExist || doesExist) {
       await this.syncBlocksPart(blkNum.add(1), doesExist)
     }
   }
 
   private async syncBlock(blkNum: BigNumber) {
     const blockResult = await this.getBlock(blkNum)
-    if(blockResult.isOk()) {
+    if (blockResult.isOk()) {
       const block = blockResult.ok()
       const tasks = block.txs.map(async tx => {
         await this.segmentChecker.spend(tx)
@@ -250,6 +273,5 @@ export class Chain {
     } else {
       return false
     }
-  } 
-
+  }
 }

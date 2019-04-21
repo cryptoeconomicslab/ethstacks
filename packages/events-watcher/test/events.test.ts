@@ -1,18 +1,19 @@
-import { describe, it } from "mocha"
-import { EventWatcher, DefaultEventWatcherStorage, IETHEventAdaptor } from '../src'
+import { describe, it } from 'mocha'
+import {
+  EventWatcher,
+  DefaultEventWatcherStorage,
+  IETHEventAdaptor
+} from '../src'
 
-import { assert } from "chai"
-import { utils, providers } from "ethers"
+import { assert } from 'chai'
+import { utils, providers } from 'ethers'
 
 export class MockEventAdaptor implements IETHEventAdaptor {
-
   parseLog(e: providers.Log): utils.LogDescription {
     return {
       name: 'mock',
       signature: '',
-      decode: () => {
-
-      },
+      decode: () => {},
       topic: '',
       values: []
     }
@@ -22,36 +23,38 @@ export class MockEventAdaptor implements IETHEventAdaptor {
     return 1
   }
 
-  async getLogs(fromBlockNumber: number, blockNumber: number, confirmation: number): Promise<providers.Log[]> {
-    return [{
-      address: '',
-      transactionHash: 'mock-transactionHash',
-      topics: [],
-      data: ''
-    }]
+  async getLogs(
+    fromBlockNumber: number,
+    blockNumber: number,
+    confirmation: number
+  ): Promise<providers.Log[]> {
+    return [
+      {
+        address: '',
+        transactionHash: 'mock-transactionHash',
+        topics: [],
+        data: ''
+      }
+    ]
   }
 }
 
 describe('EventWatcher', () => {
-
   let eventWatcher: EventWatcher
   let storage: DefaultEventWatcherStorage
 
   beforeEach(() => {
     storage = new DefaultEventWatcherStorage()
-    eventWatcher = new EventWatcher(
-      new MockEventAdaptor(),
-      storage,
-      {
-        initialBlock: 1,
-        interval: 10000,
-        confirmation: 0
-      })
+    eventWatcher = new EventWatcher(new MockEventAdaptor(), storage, {
+      initialBlock: 1,
+      interval: 10000,
+      confirmation: 0
+    })
   })
 
-  it('should success to addEvent', (done) => {
+  it('should success to addEvent', done => {
     let handlerCalled = false
-    eventWatcher.addEvent('mock', (e) => {
+    eventWatcher.addEvent('mock', e => {
       assert.equal(e.name, 'mock')
       handlerCalled = true
     })
@@ -61,5 +64,4 @@ describe('EventWatcher', () => {
       done()
     })
   })
-
 })

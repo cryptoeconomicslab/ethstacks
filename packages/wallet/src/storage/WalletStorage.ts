@@ -3,13 +3,11 @@ import {
   MapUtil,
   SignedTransactionWithProof
 } from '@layer2/core'
-import {
-  IStorage
-} from './IStorage'
-import { Exit, TokenType, UserAction } from '../models';
+import { IStorage } from './IStorage'
+import { Exit, TokenType, UserAction } from '../models'
 
 export class WalletStorage {
-  storage: IStorage
+  public storage: IStorage
   private tokens: TokenType[]
   private exitList: Map<string, string>
 
@@ -19,100 +17,73 @@ export class WalletStorage {
     this.exitList = new Map<string, string>()
   }
 
-  async init() {
+  public async init() {
     this.tokens = await this.loadTokens()
     this.exitList = await this.loadExits()
   }
 
-  getStorage() {
+  public getStorage() {
     return this.storage
   }
 
-  private async get(key: string, defaultValue: any): Promise<any> {
-    try {
-      const value = await this.storage.get(key)
-      return JSON.parse(value)
-    } catch(e) {
-      return defaultValue
-    }
-  }
-
-  private async set(key: string, value: any) {
-    return this.storage.set(key, JSON.stringify(value))
-  }
-
-  async getLoadedPlasmaBlockNumber(): Promise<number> {
+  public async getLoadedPlasmaBlockNumber(): Promise<number> {
     return this.get('loadedBlockNumber', 0)
   }
 
-  async setLoadedPlasmaBlockNumber(n: number) {
+  public async setLoadedPlasmaBlockNumber(n: number) {
     await this.set('loadedBlockNumber', n)
   }
 
-  /**
-   * @ignore
-   */
-  private async loadTokens(): Promise<TokenType[]> {
-    this.tokens = await this.get('tokens', [])
+  public getTokens(): TokenType[] {
     return this.tokens
   }
 
-  getTokens(): TokenType[] {
-    return this.tokens
-  }
-
-  async addToken(id: number, address: string) {
+  public async addToken(id: number, address: string) {
     this.tokens[id] = {
-      id: id,
-      address: address
+      id,
+      address
     }
     await this.set('tokens', this.tokens)
   }
-  
-  async getState(): Promise<any> {
+
+  public async getState(): Promise<any> {
     return this.get('state', [])
   }
 
-  async setState(utxo: any) {
+  public async setState(utxo: any) {
     this.set('state', utxo)
   }
 
-  setExit(exit: Exit) {
+  public setExit(exit: Exit) {
     this.exitList.set(exit.getId(), exit.serialize())
-    this.storeMap('exits', this.exitList)    
+    this.storeMap('exits', this.exitList)
   }
-  
-  deleteExit(id: string) {
+
+  public deleteExit(id: string) {
     this.exitList.delete(id)
     this.storeMap('exits', this.exitList)
   }
 
-  getExitList(): Exit[] {
+  public getExitList(): Exit[] {
     const arr: Exit[] = []
     this.exitList.forEach(value => {
       arr.push(Exit.deserialize(value))
     })
     return arr
   }
-  
-  getExit(exitId: string): Exit | null {
+
+  public getExit(exitId: string): Exit | null {
     const serialized = this.exitList.get(exitId)
-    if(serialized)
+    if (serialized) {
       return Exit.deserialize(serialized)
+    }
     return null
   }
 
   /**
    * @ignore
    */
-  private async loadExits() {
-    return this.loadMap<string>('exits')
-  }
-
-  /**
-   * @ignore
-   */
-  async loadExitableRangeManager() {
+  public async loadExitableRangeManager() {
     const exitable = await this.get('exitable', [])
     return ExitableRangeManager.deserialize(exitable)
   }
@@ -120,25 +91,23 @@ export class WalletStorage {
   /**
    * @ignore
    */
-  saveExitableRangeManager(
-    exitableRangeManager: ExitableRangeManager
-  ) {
+  public saveExitableRangeManager(exitableRangeManager: ExitableRangeManager) {
     this.set('exitable', exitableRangeManager.serialize())
   }
 
-  storeMap<T>(key: string, map: Map<string, T>) {
+  public storeMap<T>(key: string, map: Map<string, T>) {
     this.set(key, MapUtil.serialize<T>(map))
   }
-  
-  async loadMap<T>(key: string) {
+
+  public async loadMap<T>(key: string) {
     return MapUtil.deserialize<T>(await this.get(key, {}))
   }
 
-  async addUserAction(blkNum: number, action: UserAction) {
+  public async addUserAction(blkNum: number, action: UserAction) {
     await this.storage.addAction(action.id, blkNum, JSON.stringify(action))
   }
 
-  async searchActions(blkNum: number): Promise<UserAction[]> {
+  public async searchActions(blkNum: number): Promise<UserAction[]> {
     const data = await this.storage.searchActions(blkNum)
     return data.map(data => {
       const obj = JSON.parse(data.value)
@@ -152,4 +121,31 @@ export class WalletStorage {
     })
   }
 
+  private async get(key: string, defaultValue: any): Promise<any> {
+    try {
+      const value = await this.storage.get(key)
+      return JSON.parse(value)
+    } catch (e) {
+      return defaultValue
+    }
+  }
+
+  private async set(key: string, value: any) {
+    return this.storage.set(key, JSON.stringify(value))
+  }
+
+  /**
+   * @ignore
+   */
+  private async loadTokens(): Promise<TokenType[]> {
+    this.tokens = await this.get('tokens', [])
+    return this.tokens
+  }
+
+  /**
+   * @ignore
+   */
+  private async loadExits() {
+    return this.loadMap<string>('exits')
+  }
 }

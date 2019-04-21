@@ -12,16 +12,22 @@ import { utils } from 'ethers'
 
 function getPrivateKey(): string {
   const privateKey = process.env.PRIVATE_KEY
-  if(privateKey) {
+  if (privateKey) {
     return privateKey
   } else {
     throw new Error('private key nor defined')
   }
 }
 
-const childChainEndpoint = process.env.CHILDCHAIN_ENDPOINT || 'http://localhost:3000'
+const childChainEndpoint =
+  process.env.CHILDCHAIN_ENDPOINT || 'http://localhost:3000'
 const jsonRpcClient = new JsonRpcClient(childChainEndpoint)
-const client = new PlasmaClient(jsonRpcClient, new WalletMQTTClient(process.env.CHILDCHAIN_PUBSUB_ENDPOINT || childChainEndpoint))
+const client = new PlasmaClient(
+  jsonRpcClient,
+  new WalletMQTTClient(
+    process.env.CHILDCHAIN_PUBSUB_ENDPOINT || childChainEndpoint
+  )
+)
 const privateKey = getPrivateKey()
 const address = utils.computeAddress(privateKey)
 const options = {
@@ -35,10 +41,10 @@ const options = {
 const basePath = path.join(__dirname, './.clidb')
 const persnalPath = path.join(basePath, address)
 if (!fs.existsSync(basePath)) {
-  fs.mkdirSync(basePath);
+  fs.mkdirSync(basePath)
 }
 if (!fs.existsSync(persnalPath)) {
-  fs.mkdirSync(persnalPath);
+  fs.mkdirSync(persnalPath)
 }
 const storage = new FileStorage(persnalPath)
 const wallet = ChamberWallet.createWalletWithPrivateKey(
@@ -50,15 +56,11 @@ const wallet = ChamberWallet.createWalletWithPrivateKey(
   options
 )
 
-program
-  .version('0.0.37')
-  .parse(process.argv)
+program.version('0.0.37').parse(process.argv)
 
-program
-  .command('balance')
-  .action(async function(options) {
-    await balance()
-  })
+program.command('balance').action(async function(options) {
+  await balance()
+})
 
 program
   .command('deposit')
@@ -77,14 +79,11 @@ program
     console.log('finished')
   })
 
-program
-  .command('merge')
-  .action(async function(options) {
-    await merge()
-  })
+program.command('merge').action(async function(options) {
+  await merge()
+})
 
 program.parse(process.argv)
-
 
 async function deposit(amount: string) {
   await wallet.init()
@@ -113,7 +112,7 @@ async function transfer(to: string, amount: string) {
 }
 
 async function balance() {
-  wallet.on('updated', async (e) => {
+  wallet.on('updated', async e => {
     const result = await e.wallet.getBalance()
     console.log('balance=', result.toNumber())
   })
@@ -126,11 +125,11 @@ async function balance() {
 }
 
 async function waitUpdate() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const timeout = setTimeout(() => {
       resolve(wallet)
     }, 15000)
-    wallet.on('updated', async (e) => {
+    wallet.on('updated', async e => {
       clearTimeout(timeout)
       resolve(e.wallet)
     })
@@ -138,8 +137,8 @@ async function waitUpdate() {
 }
 
 async function waitSent() {
-  return new Promise((resolve) => {
-    wallet.on('send', async (e) => {
+  return new Promise(resolve => {
+    wallet.on('send', async e => {
       resolve(e.wallet)
     })
   })

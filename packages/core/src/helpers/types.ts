@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers/utils';
+import { BigNumber } from 'ethers/utils'
 
 export type HexString = string
 export type Hash = HexString

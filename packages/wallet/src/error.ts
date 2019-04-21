@@ -1,17 +1,16 @@
 import { ChamberError } from '@layer2/core'
 
 export class WalletErrorFactory {
-  static InvalidReceipt() {
+  public static InvalidReceipt() {
     return new ChamberError(1200, 'invalid receipt')
   }
-  static ExitNotFound() {
+  public static ExitNotFound() {
     return new ChamberError(1220, 'exit not found')
   }
-  static TooLargeAmount() {
+  public static TooLargeAmount() {
     return new ChamberError(1230, 'too large amount')
   }
-  static SwapRequestError() {
+  public static SwapRequestError() {
     return new ChamberError(1240, 'swap request error')
   }
-  
 }

@@ -14,49 +14,46 @@ export class ChamberOk<T> implements ChamberResult<T> {
     this.value = v
   }
 
-  isOk(): boolean {
+  public isOk(): boolean {
     return true
   }
 
-  isError(): boolean {
+  public isError(): boolean {
     return false
   }
 
-  ok(): T {
+  public ok(): T {
     return this.value
   }
 
-  error(): ChamberError {
-    throw 'ok.error'
+  public error(): ChamberError {
+    throw new Error('ok.error')
   }
-
 }
 
 export class ChamberResultError<T> implements ChamberResult<T> {
+  public static getError<T>(code: number, message: string) {
+    return new ChamberResultError<T>(new ChamberError(code, message))
+  }
   private err: ChamberError
 
   constructor(error: ChamberError) {
     this.err = error
   }
 
-  isOk(): boolean {
+  public isOk(): boolean {
     return false
   }
 
-  isError(): boolean {
+  public isError(): boolean {
     return true
   }
 
-  ok(): T {
-    throw 'error.ok'
+  public ok(): T {
+    throw new Error('error.ok')
   }
 
-  error(): ChamberError {
+  public error(): ChamberError {
     return this.err
   }
-
-  static getError<T>(code: number, message: string) {
-    return new ChamberResultError<T>(new ChamberError(code, message))
-  }
-
 }

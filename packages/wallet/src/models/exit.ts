@@ -1,11 +1,20 @@
-import { bigNumberify, BigNumber } from 'ethers/utils';
+import { bigNumberify, BigNumber } from 'ethers/utils'
 import { Segment } from '@layer2/core'
 
 export class Exit {
-  id: BigNumber
-  exitableAt: BigNumber
-  segment: Segment
-  stateBytes: string
+  public static deserialize(str: string) {
+    const data = JSON.parse(str)
+    return new Exit(
+      bigNumberify(data.id),
+      bigNumberify(data.exitableAt),
+      Segment.deserialize(data.segment),
+      data.stateBytes
+    )
+  }
+  public id: BigNumber
+  public exitableAt: BigNumber
+  public segment: Segment
+  public stateBytes: string
 
   constructor(
     id: BigNumber,
@@ -19,26 +28,26 @@ export class Exit {
     this.stateBytes = stateBytes
   }
 
-  getId(): string {
+  public getId(): string {
     return this.id.toString()
   }
 
   /**
    * @return return exitable time as unixtime(second)
    */
-  getExitableAt(): number {
+  public getExitableAt(): number {
     return this.exitableAt.toNumber() * 1000
   }
 
-  getStateBytes(): string {
+  public getStateBytes(): string {
     return this.stateBytes
   }
 
-  getAmount(): number {
+  public getAmount(): number {
     return this.segment.getAmount().toNumber()
   }
 
-  serialize() {
+  public serialize() {
     return JSON.stringify({
       id: this.id.toString(),
       exitableAt: this.exitableAt.toString(),
@@ -46,15 +55,4 @@ export class Exit {
       stateBytes: this.stateBytes
     })
   }
-
-  static deserialize(str: string) {
-    const data = JSON.parse(str)
-    return new Exit(
-      bigNumberify(data.id),
-      bigNumberify(data.exitableAt),
-      Segment.deserialize(data.segment),
-      data.stateBytes
-    )
-  }
-
 }

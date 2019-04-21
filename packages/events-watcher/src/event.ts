@@ -7,17 +7,19 @@ export type CompletedHandler = () => void
 export type ErrorHandler = (err: Error) => void
 
 export interface IETHEventAdaptor {
-
   parseLog(e: ethers.providers.Log): ethers.utils.LogDescription
   getLatestBlockNumber(): Promise<number>
-  getLogs(fromBlockNumber: number, blockNumber: number, confirmation: number): Promise<ethers.providers.Log[]>
-
+  getLogs(
+    fromBlockNumber: number,
+    blockNumber: number,
+    confirmation: number
+  ): Promise<ethers.providers.Log[]>
 }
 
 export class ETHEventAdaptor implements IETHEventAdaptor {
-  address: string
-  provider: JsonRpcProvider
-  rootChainInterface: ethers.utils.Interface
+  public address: string
+  public provider: JsonRpcProvider
+  public rootChainInterface: ethers.utils.Interface
 
   constructor(
     address: string,
@@ -29,16 +31,20 @@ export class ETHEventAdaptor implements IETHEventAdaptor {
     this.address = address
   }
 
-  parseLog(e: ethers.providers.Log): ethers.utils.LogDescription {
+  public parseLog(e: ethers.providers.Log): ethers.utils.LogDescription {
     return this.rootChainInterface.parseLog(e)
   }
 
-  async getLatestBlockNumber() {
+  public async getLatestBlockNumber() {
     const block = await this.provider.getBlock('latest')
     return block.number
   }
 
-  async getLogs(fromBlockNumber: number, blockNumber: number, confirmation: number) {
+  public async getLogs(
+    fromBlockNumber: number,
+    blockNumber: number,
+    confirmation: number
+  ) {
     const events = await this.provider.getLogs({
       address: this.address,
       fromBlock: fromBlockNumber - confirmation * 2,
@@ -48,19 +54,19 @@ export class ETHEventAdaptor implements IETHEventAdaptor {
   }
 }
 
-export type EventWatcherOptions = {
+export interface EventWatcherOptions {
   initialBlock: number
   interval: number
   confirmation: number
 }
 
 export class EventWatcher {
-  adaptor: IETHEventAdaptor
-  storage: IEventWatcherStorage
-  checkingEvents: Map<string, RootChainEventHandler>
-  options: EventWatcherOptions
-  timer?: NodeJS.Timeout
-  
+  public adaptor: IETHEventAdaptor
+  public storage: IEventWatcherStorage
+  public checkingEvents: Map<string, RootChainEventHandler>
+  public options: EventWatcherOptions
+  public timer?: NodeJS.Timeout
+
   constructor(
     adaptor: IETHEventAdaptor,
     storage: IEventWatcherStorage,
@@ -69,63 +75,75 @@ export class EventWatcher {
     this.adaptor = adaptor
     this.storage = storage
     this.checkingEvents = new Map<string, RootChainEventHandler>()
-    this.options = Object.assign({}, {
+    this.options = {
       initialBlock: 1,
       interval: 1000,
-      confirmation: 0
-    }, options)
+      confirmation: 0,
+      ...options
+    }
   }
 
-  addEvent(event: string, handler: RootChainEventHandler) {
+  public addEvent(event: string, handler: RootChainEventHandler) {
     this.checkingEvents.set(event, handler)
   }
 
-  async initPolling(handler: CompletedHandler, errorHandler?: ErrorHandler) {
+  public async initPolling(
+    handler: CompletedHandler,
+    errorHandler?: ErrorHandler
+  ) {
     try {
       const blockNumber = await this.adaptor.getLatestBlockNumber()
       const loaded = await this.storage.getLoaded(this.options.initialBlock)
       await this.polling(loaded, blockNumber, handler)
-    } catch(e) {
+    } catch (e) {
       console.log(e)
-      if(errorHandler) {
+      if (errorHandler) {
         errorHandler(e)
       }
     }
-    this.timer = setTimeout(async ()=>{
-      await this.initPolling(handler, errorHandler);
-    }, this.options.interval);
+    this.timer = setTimeout(async () => {
+      await this.initPolling(handler, errorHandler)
+    }, this.options.interval)
   }
 
-  cancel() {
-    if(this.timer) {
+  public cancel() {
+    if (this.timer) {
       clearTimeout(this.timer)
     }
   }
 
-  async polling(fromBlockNumber: number, blockNumber: number, completedHandler: CompletedHandler) {
+  public async polling(
+    fromBlockNumber: number,
+    blockNumber: number,
+    completedHandler: CompletedHandler
+  ) {
     const events = await this.adaptor.getLogs(
       fromBlockNumber,
       blockNumber,
       this.options.confirmation
     )
-    const filtered = events.filter(e => {
-      if(e.transactionHash)
-        return !this.storage.getSeen(e.transactionHash)
-      else
-        return false
-    }).map((e) => {
-      const logDesc = this.adaptor.parseLog(e)
-      const handler = this.checkingEvents.get(logDesc.name)
-      if(handler) {
-        handler(logDesc)
-      }
-      if(e.transactionHash) {
-        this.storage.addSeen(e.transactionHash)
-      }
-      return true
-    })
+    const filtered = events
+      .filter(e => {
+        if (e.transactionHash) {
+          return !this.storage.getSeen(e.transactionHash)
+        } else {
+          return false
+        }
+      })
+      .map(e => {
+        const logDesc = this.adaptor.parseLog(e)
+        const handler = this.checkingEvents.get(logDesc.name)
+        if (handler) {
+          handler(logDesc)
+        }
+        if (e.transactionHash) {
+          this.storage.addSeen(e.transactionHash)
+        }
+        return true
+      })
     await this.storage.setLoaded(blockNumber)
-    if(filtered.length > 0) completedHandler()
+    if (filtered.length > 0) {
+      completedHandler()
+    }
   }
-  
 }

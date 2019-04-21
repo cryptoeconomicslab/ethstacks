@@ -1,4 +1,1 @@
-export {
-  Chain,
-} from './chain'
-
+export { Chain } from './chain'

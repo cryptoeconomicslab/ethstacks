@@ -1,52 +1,49 @@
 import * as ethers from 'ethers'
 import * as Logger from 'js-logger'
 import { PlasmaClient } from './PlasmaClient'
-import {
-  WalletStorage
-} from '../storage/WalletStorage'
-import {
-  Address,
-  Block,
-  MapUtil,
-} from '@layer2/core'
+import { WalletStorage } from '../storage/WalletStorage'
+import { Address, Block, MapUtil } from '@layer2/core'
 import { WaitingBlockWrapper } from '../models'
 import artifact from '../assets/RootChain.json'
-import { IEventWatcherStorage, EventWatcher, ETHEventAdaptor } from '@layer2/events-watcher'
+import {
+  IEventWatcherStorage,
+  EventWatcher,
+  ETHEventAdaptor
+} from '@layer2/events-watcher'
 import { IStorage } from '../storage/IStorage'
 import { EventEmitter } from 'events'
-if(!artifact.abi) {
+if (!artifact.abi) {
   console.error('ABI not found')
 }
 
 export class WalletEventWatcherStorage implements IEventWatcherStorage {
-  storage: IStorage
-  private seen: { [key: string]: boolean} = {}
+  public storage: IStorage
+  private seen: { [key: string]: boolean } = {}
 
   constructor(storage: IStorage) {
     this.storage = storage
   }
 
-  async getLoaded(initialBlock: number) {
+  public async getLoaded(initialBlock: number) {
     try {
       const loaded = await this.storage.get('loaded')
       return parseInt(loaded)
-    } catch(e) {
+    } catch (e) {
       return initialBlock
     }
   }
 
-  async setLoaded(loaded: number) {
+  public async setLoaded(loaded: number) {
     this.storage.set('loaded', loaded.toString())
   }
 
-  addSeen(event: string) {
+  public addSeen(event: string) {
     this.seen[event] = true
   }
 
-  getSeen(event: string) {
+  public getSeen(event: string) {
     return this.seen[event]
   }
-
 }
 
 export class PlasmaSyncher extends EventEmitter {
@@ -71,58 +68,49 @@ export class PlasmaSyncher extends EventEmitter {
     this.waitingBlocks = new Map<string, string>()
     this.rootChainInterface = new ethers.utils.Interface(artifact.abi)
     this.listener = new EventWatcher(
-      new ETHEventAdaptor(contractAddress, this.httpProvider, this.rootChainInterface),
+      new ETHEventAdaptor(
+        contractAddress,
+        this.httpProvider,
+        this.rootChainInterface
+      ),
       new WalletEventWatcherStorage(storage.getStorage()),
       options
     )
-    this.listener.addEvent('BlockSubmitted', (e) => {
+    this.listener.addEvent('BlockSubmitted', e => {
       Logger.debug('BlockSubmitted', e)
-      this.addWaitingBlock(new WaitingBlockWrapper(
-        e.values._blkNum,
-        e.values._root
-      ))
+      this.addWaitingBlock(
+        new WaitingBlockWrapper(e.values._blkNum, e.values._root)
+      )
     })
   }
-  
-  getListener() {
+
+  public getListener() {
     return this.listener
   }
 
   /**
-   * 
-   * @param handler 
-   * 
+   *
+   * @param handler
+   *
    * ```typescript
    * await wallet.init((wallet) => {})
    * ```
    */
-  async init(handler: () => void) {
+  public async init(handler: () => void) {
     this.waitingBlocks = await this.storage.loadMap<string>('waitingBlocks')
     await this.listener.initPolling(() => {
       handler()
     })
   }
 
-  cancel() {
+  public cancel() {
     this.listener.cancel()
   }
 
-  /**
-   * @ignore
-   */
-  private async loadBlocks() {
-    const tasks = this.getWaitingBlocks().map(block => {
-      return this.client.getBlock(block.blkNum.toNumber())
-    })
-    return Promise.all(tasks)
-  }
-
-  async sync(
-    handler: (block: Block) => Promise<void>
-  ): Promise<void> {
+  public async sync(handler: (block: Block) => Promise<void>): Promise<void> {
     const results = await this.loadBlocks()
     const tasks = results.map(block => {
-      if(block.isOk()) {
+      if (block.isOk()) {
         const tasks = handler(block.ok())
         // When success to get block, remove the block from waiting block list
         this.deleteWaitingBlock(block.ok().number)
@@ -136,7 +124,7 @@ export class PlasmaSyncher extends EventEmitter {
     await Promise.all(tasks)
   }
 
-  getWaitingBlocks(): WaitingBlockWrapper[] {
+  public getWaitingBlocks(): WaitingBlockWrapper[] {
     const arr: WaitingBlockWrapper[] = []
     this.waitingBlocks.forEach(value => {
       arr.push(WaitingBlockWrapper.deserialize(value))
@@ -147,11 +135,24 @@ export class PlasmaSyncher extends EventEmitter {
   /**
    * @ignore
    */
+  private async loadBlocks() {
+    const tasks = this.getWaitingBlocks().map(block => {
+      return this.client.getBlock(block.blkNum.toNumber())
+    })
+    return Promise.all(tasks)
+  }
+
+  /**
+   * @ignore
+   */
   private addWaitingBlock(blockHeader: WaitingBlockWrapper) {
-    this.waitingBlocks.set(blockHeader.blkNum.toString(), blockHeader.serialize())
+    this.waitingBlocks.set(
+      blockHeader.blkNum.toString(),
+      blockHeader.serialize()
+    )
     this.storage.storeMap('waitingBlocks', this.waitingBlocks)
     this.emit('PlasmaBlockHeaderAdded', {
-      blockHeader: blockHeader
+      blockHeader
     })
   }
 
@@ -162,5 +163,4 @@ export class PlasmaSyncher extends EventEmitter {
     this.waitingBlocks.delete(blkNum.toString())
     this.storage.storeMap('waitingBlocks', this.waitingBlocks)
   }
-  
 }

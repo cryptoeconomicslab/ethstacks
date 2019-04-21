@@ -1,6 +1,4 @@
-export {
-  ChamberWallet
-} from './wallet'
+export { ChamberWallet } from './wallet'
 
 export * from './client'
 

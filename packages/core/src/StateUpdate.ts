@@ -1,17 +1,29 @@
-import { Segment } from './segment';
-import { BigNumber } from 'ethers/utils';
-import { Address, RLPItem, Hash } from './helpers/types';
-import { utils, constants } from 'ethers';
+import { Segment } from './segment'
+import { BigNumber } from 'ethers/utils'
+import { Address, RLPItem, Hash } from './helpers/types'
+import { utils, constants } from 'ethers'
 import RLP = utils.RLP
 import { DecoderUtility } from './utils/Decoder'
 import { IState } from './state/BaseStateManager'
 
 export class StateUpdate implements IState {
-  segment: Segment
-  blkNum: BigNumber
-  predicate: Address
+  public static deserialize(data: string) {
+    return StateUpdate.fromTupl(RLP.decode(data))
+  }
+
+  public static fromTupl(data: RLPItem[]) {
+    return new StateUpdate(
+      Segment.fromBigNumber(utils.bigNumberify(data[0])),
+      utils.bigNumberify(data[1]),
+      utils.getAddress(data[2]),
+      data[3]
+    )
+  }
+  public segment: Segment
+  public blkNum: BigNumber
+  public predicate: Address
   // hex string
-  state: string
+  public state: string
 
   constructor(
     segment: Segment,
@@ -25,89 +37,69 @@ export class StateUpdate implements IState {
     this.state = state
   }
 
-  getSegment(): Segment {
+  public getSegment(): Segment {
     return this.segment
   }
 
-  getBlkNum(): BigNumber {
+  public getBlkNum(): BigNumber {
     return this.blkNum
   }
 
-  getRawState() {
+  public getRawState() {
     return this.state
   }
 
-  serialize() {
+  public serialize() {
     return RLP.encode(this.encodeToTuple())
   }
 
-  static deserialize(data: string) {
-    return StateUpdate.fromTupl(RLP.decode(data))
-  }
-
-  encodeToTuple(): RLPItem[] {
-    return [
-      this.segment.toBigNumber(),
-      this.blkNum,
-      this.predicate,
-      this.state
-    ]
-  }
-
-  static fromTupl(data: RLPItem[]) {
-    return new StateUpdate(
-      Segment.fromBigNumber(utils.bigNumberify(data[0])),
-      utils.bigNumberify(data[1]),
-      utils.getAddress(data[2]),
-      data[3]
-    )
+  public encodeToTuple(): RLPItem[] {
+    return [this.segment.toBigNumber(), this.blkNum, this.predicate, this.state]
   }
 
   /**
    * for RootChain contract
    */
-  encode(): string {
+  public encode(): string {
     const predicate = utils.padZeros(utils.arrayify(this.predicate), 32)
     const blkNum = utils.padZeros(utils.arrayify(this.blkNum), 32)
-    const segment = utils.padZeros(utils.arrayify(this.segment.toBigNumber()), 32)
+    const segment = utils.padZeros(
+      utils.arrayify(this.segment.toBigNumber()),
+      32
+    )
     const stateBytes = utils.arrayify(this.state)
-    return utils.hexlify(utils.concat([
-      predicate,
-      blkNum,
-      segment,
-      stateBytes]))
+    return utils.hexlify(utils.concat([predicate, blkNum, segment, stateBytes]))
   }
 
-  getStateHash() {
+  public getStateHash() {
     return this.hash()
   }
 
-  hash(): string {
+  public hash(): string {
     return utils.keccak256(this.encode())
   }
 
-  getSubStateUpdate(newSegment: Segment): StateUpdate {
-    if(this.segment.isContain(newSegment)) {
+  public getSubStateUpdate(newSegment: Segment): StateUpdate {
+    if (this.segment.isContain(newSegment)) {
       return new StateUpdate(
         newSegment,
         this.blkNum,
         this.predicate,
-        this.state)
+        this.state
+      )
     } else {
       return this
     }
   }
 
-  getRemainingState(
-    state: StateUpdate
-  ): StateUpdate[] {
+  public getRemainingState(state: StateUpdate): StateUpdate[] {
     const newSegments = this.getSegment().sub(state.getSegment())
     return newSegments.map(s => {
       return new StateUpdate(s, this.getBlkNum(), this.predicate, this.state)
     })
   }
 
-  verifyDeprecation(
+  public verifyDeprecation(
     hash: Hash,
     newStateUpdate: StateUpdate,
     deprecationWitness: string,
@@ -119,8 +111,9 @@ export class StateUpdate implements IState {
         hash,
         this,
         deprecationWitness,
-        newStateUpdate)
-    } catch(e) {
+        newStateUpdate
+      )
+    } catch (e) {
       console.warn("can't verify deprecation because", e)
       return false
     }
@@ -128,40 +121,39 @@ export class StateUpdate implements IState {
 
   // spesific methods
 
-  isOwnedBy(
-    owner: Address,
-    predicatesManager: PredicatesManager
-  ) {
+  public isOwnedBy(owner: Address, predicatesManager: PredicatesManager) {
     return predicatesManager.isOwnedBy(this.predicate, owner, this)
   }
 
-  getOwner() {
+  public getOwner() {
     return DecoderUtility.getAddress(this.state)
   }
-
 }
 
 export class PredicatesManager {
-  predicates: Map<Address, string>
-  name2address: Map<string, Address>
+  public predicates: Map<Address, string>
+  public name2address: Map<string, Address>
 
   constructor() {
     this.predicates = new Map<Address, string>()
     this.name2address = new Map<string, Address>()
   }
 
-  addPredicate(predicateAddress: Address, nativePredicate: string) {
+  public addPredicate(predicateAddress: Address, nativePredicate: string) {
     this.predicates.set(predicateAddress, nativePredicate)
     this.name2address.set(nativePredicate, predicateAddress)
   }
 
-  getNativePredicate(nativePredicate: string) {
+  public getNativePredicate(nativePredicate: string) {
     const address = this.name2address.get(nativePredicate)
-    if(address) return address
-    else throw new Error('unknown predicate name')
+    if (address) {
+      return address
+    } else {
+      throw new Error('unknown predicate name')
+    }
   }
 
-  verifyDeprecation(
+  public verifyDeprecation(
     predicate: Address,
     hash: string,
     stateUpdate: StateUpdate,
@@ -169,14 +161,14 @@ export class PredicatesManager {
     nextStateUpdate: StateUpdate
   ) {
     const native = this.predicates.get(predicate)
-    if(native == 'OwnershipPredicate') {
+    if (native == 'OwnershipPredicate') {
       return OwnershipPredicate.verifyDeprecation(
         hash,
         stateUpdate,
         deprecationWitness,
         nextStateUpdate
       )
-    } else if(native == 'PaymentChannelPredicate') {
+    } else if (native == 'PaymentChannelPredicate') {
       return PaymentChannelPredicate.verifyDeprecation(
         hash,
         stateUpdate,
@@ -187,13 +179,13 @@ export class PredicatesManager {
     return false
   }
 
-  isOwnedBy(
+  public isOwnedBy(
     predicate: Address,
     owner: Address,
-    stateUpdate: StateUpdate,
+    stateUpdate: StateUpdate
   ) {
     const native = this.predicates.get(predicate)
-    if(native == 'OwnershipPredicate') {
+    if (native == 'OwnershipPredicate') {
       return OwnershipPredicate.isOwnedBy(owner, stateUpdate)
     }
     return false
@@ -201,8 +193,7 @@ export class PredicatesManager {
 }
 
 export class OwnershipPredicate {
-
-  static create(
+  public static create(
     segment: Segment,
     blkNum: BigNumber,
     predicate: Address,
@@ -216,32 +207,27 @@ export class OwnershipPredicate {
     )
   }
 
-  static verifyDeprecation(
+  public static verifyDeprecation(
     hash: string,
     stateUpdate: StateUpdate,
     deprecationWitness: string,
     nextStateUpdate: StateUpdate
   ): boolean {
     const isContain = stateUpdate.segment.isContain(nextStateUpdate.segment)
-    const isCorrectSig = utils.recoverAddress(
-      hash, deprecationWitness) == DecoderUtility.getAddress(stateUpdate.state)
+    const isCorrectSig =
+      utils.recoverAddress(hash, deprecationWitness) ==
+      DecoderUtility.getAddress(stateUpdate.state)
     return isContain && isCorrectSig
   }
 
-  static isOwnedBy(
-    owner: Address,
-    stateUpdate: StateUpdate,
-  ): boolean {
+  public static isOwnedBy(owner: Address, stateUpdate: StateUpdate): boolean {
     const address32 = DecoderUtility.decode(stateUpdate.state)[0]
     return DecoderUtility.getAddress(address32) == utils.getAddress(owner)
   }
-
 }
 
-
 export class PaymentChannelPredicate {
-
-  static create(
+  public static create(
     segment: Segment,
     blkNum: BigNumber,
     predicate: Address,
@@ -254,11 +240,16 @@ export class PaymentChannelPredicate {
       segment,
       blkNum,
       predicate,
-      DecoderUtility.encode([hash, participant1, participant2, utils.bigNumberify(stateIndex).toHexString()])
+      DecoderUtility.encode([
+        hash,
+        participant1,
+        participant2,
+        utils.bigNumberify(stateIndex).toHexString()
+      ])
     )
   }
 
-  static verifyDeprecation(
+  public static verifyDeprecation(
     hash: string,
     stateUpdate: StateUpdate,
     deprecationWitness: string,
@@ -266,19 +257,21 @@ export class PaymentChannelPredicate {
   ): boolean {
     const isContain = stateUpdate.segment.isContain(nextStateUpdate.segment)
     const decoded = DecoderUtility.decode(stateUpdate.state)
-    const isCorrectSig1 = utils.recoverAddress(
-      hash, utils.hexDataSlice(deprecationWitness, 0, 65)) == DecoderUtility.getAddress(decoded[0])
-    const isCorrectSig2 = utils.recoverAddress(
-      hash, utils.hexDataSlice(deprecationWitness, 65, 130)) == DecoderUtility.getAddress(decoded[1])
+    const isCorrectSig1 =
+      utils.recoverAddress(
+        hash,
+        utils.hexDataSlice(deprecationWitness, 0, 65)
+      ) == DecoderUtility.getAddress(decoded[0])
+    const isCorrectSig2 =
+      utils.recoverAddress(
+        hash,
+        utils.hexDataSlice(deprecationWitness, 65, 130)
+      ) == DecoderUtility.getAddress(decoded[1])
     return isContain && isCorrectSig1 && isCorrectSig2
   }
 
-  static isOwnedBy(
-    owner: Address,
-    stateUpdate: StateUpdate,
-  ): boolean {
+  public static isOwnedBy(owner: Address, stateUpdate: StateUpdate): boolean {
     const decoded = DecoderUtility.decode(stateUpdate.state)
     return decoded.map(d => utils.getAddress(d)).indexOf(owner) >= 0
   }
-
 }

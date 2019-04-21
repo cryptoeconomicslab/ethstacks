@@ -4,33 +4,37 @@ import {
   SignedTransaction,
   Segment,
   ChamberOk
-} from '@layer2/core';
+} from '@layer2/core'
 import { ChainErrorFactory } from './error'
 
 export class TxFilter {
-  txHashes: Map<string, boolean>
-  segments: Segment[]
+  public txHashes: Map<string, boolean>
+  public segments: Segment[]
 
   constructor() {
     this.txHashes = new Map<string, boolean>()
     this.segments = []
   }
 
-  checkAndInsertTx(tx: SignedTransaction): ChamberResult<boolean> {
+  public checkAndInsertTx(tx: SignedTransaction): ChamberResult<boolean> {
     /*
     if(!tx.verify()) {
       throw new Error('invalid transaction')
     }
     */
-    if(this.txHashes.get(tx.hash()) !== undefined) {
+    if (this.txHashes.get(tx.hash()) !== undefined) {
       return new ChamberResultError(ChainErrorFactory.AlreadySent())
     }
-    if(tx.getStateUpdates().filter(input => {
-      const target = input.getSegment()
-      return this.segments.filter(segment => {
-        return target.start.lt(segment.end) && target.end.gt(segment.start)
+    if (
+      tx.getStateUpdates().filter(input => {
+        const target = input.getSegment()
+        return (
+          this.segments.filter(segment => {
+            return target.start.lt(segment.end) && target.end.gt(segment.start)
+          }).length > 0
+        )
       }).length > 0
-    }).length > 0) {
+    ) {
       return new ChamberResultError(ChainErrorFactory.SegmentDuplicated())
     }
     this.txHashes.set(tx.hash(), true)
@@ -38,7 +42,7 @@ export class TxFilter {
     return new ChamberOk(true)
   }
 
-  clear() {
+  public clear() {
     this.txHashes.clear()
     this.segments = []
   }

@@ -1,16 +1,15 @@
-import { create } from 'handlebars';
+import { create } from 'handlebars'
 
 export class ChamberError implements Error {
-  public name = 'ChamberError';
+  public name = 'ChamberError'
 
-  constructor(public code: number, public message: string) {
+  constructor(public code: number, public message: string) {}
+
+  public toString() {
+    return this.name + ': ' + this.message
   }
 
-  toString() {
-    return this.name + ': ' + this.message;
-  }
-
-  serialize() {
+  public serialize() {
     return {
       error: {
         code: this.code,
@@ -18,5 +17,4 @@ export class ChamberError implements Error {
       }
     }
   }
-
 }

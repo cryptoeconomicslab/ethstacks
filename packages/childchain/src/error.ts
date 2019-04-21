@@ -1,24 +1,22 @@
 import { ChamberError } from '@layer2/core'
 
 export class ChainErrorFactory {
-
-  static BlockNotFound() {
+  public static BlockNotFound() {
     return new ChamberError(1000, 'block not found')
   }
-  static InvalidTransaction() {
+  public static InvalidTransaction() {
     return new ChamberError(1010, 'invalid transaction')
   }
-  static AlreadySent() {
+  public static AlreadySent() {
     return new ChamberError(1011, 'already sent')
   }
-  static SegmentDuplicated() {
+  public static SegmentDuplicated() {
     return new ChamberError(1011, 'segment duplicated')
   }
-  static UnknownError() {
+  public static UnknownError() {
     return new ChamberError(1020, 'unknown Error')
   }
-  static NoValidTransactions() {
+  public static NoValidTransactions() {
     return new ChamberError(1030, 'no valid transactions')
   }
-
 }
