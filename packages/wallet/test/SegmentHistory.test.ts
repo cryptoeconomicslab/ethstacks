@@ -11,9 +11,9 @@ import {
 } from '../src/client'
 import { assert } from "chai"
 import { constants, utils } from "ethers"
-import { PredicatesManager, Segment, SignedTransaction, Block, OwnershipPredicate } from "@layer2/core";
-import { WaitingBlockWrapper } from "../src/models";
-import { BigNumber } from 'ethers/utils';
+import { createTransfer, AlicePrivateKey, BobPrivateKey } from './TestUtil'
+import { PredicatesManager, Segment, Block, OwnershipPredicate } from "@layer2/core"
+import { WaitingBlockWrapper } from "../src/models"
 
 class MockNetworkClient implements INetworkClient {
   request(methodName: string, args: any) {
@@ -42,11 +42,9 @@ describe('SegmentHistoryManager', () => {
   let storage = new MockStorage()
   const mockClient = new MockNetworkClient()
   const client = new PlasmaClient(mockClient, new MockPubsubClient())
-  const AlicePrivateKey = '0xe88e7cda6f7fae195d0dcda7ccb8d733b8e6bb9bd0bc4845e1093369b5dc2257'
-  const BobPrivateKey = '0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f'
   const AliceAddress = utils.computeAddress(AlicePrivateKey)
   const BobAddress = utils.computeAddress(BobPrivateKey)
-  const predicate = AliceAddress
+  const predicate = constants.AddressZero
   const predicateManager = new PredicatesManager()
   predicateManager.addPredicate(predicate, 'OwnershipPredicate')
   const segment1 = Segment.ETH(utils.bigNumberify(0), utils.bigNumberify(1000000))
@@ -55,24 +53,30 @@ describe('SegmentHistoryManager', () => {
   const blkNum5 = utils.bigNumberify(5)
   const blkNum6 = utils.bigNumberify(6)
   const blkNum8 = utils.bigNumberify(8)
-  const block6 = new Block(6)
+  const blkNum10 = utils.bigNumberify(10)
+  const block6 = new Block(1)
   block6.setBlockNumber(6)
-  const block8 = new Block(8)
+  const block8 = new Block(1)
   block8.setBlockNumber(8)
+  const block10 = new Block(1)
+  block10.setBlockNumber(10)
   const depositTx1 = OwnershipPredicate.create(segment1, blkNum3, predicate, AliceAddress)
   const depositTx2 = OwnershipPredicate.create(segment2, blkNum5, predicate, BobAddress)
-  const tx61 = createTransfer(
-    AlicePrivateKey, predicate, segment1, blkNum3, BobAddress)
+  const tx61 = createTransfer(AlicePrivateKey, predicate, segment1, blkNum6, BobAddress)
   const tx62 = createTransfer(BobPrivateKey, predicate, segment2, blkNum6, AliceAddress)
   block6.appendTx(tx61)
   block6.appendTx(tx62)
-  const tx81 = createTransfer(
-    AlicePrivateKey, predicate, segment2, blkNum6, BobAddress)
-  const tx82 = createTransfer(BobPrivateKey, predicate, segment1, blkNum8, AliceAddress)
-  block8.appendTx(tx81)
+
+  const tx82 = createTransfer(AlicePrivateKey, predicate, segment2, blkNum8, BobAddress)
   block8.appendTx(tx82)
+
+  const tx101 = createTransfer(BobPrivateKey, predicate, segment1, blkNum10, AliceAddress)
+  const tx102 = createTransfer(AlicePrivateKey, predicate, segment2, blkNum10, BobAddress)
+  block10.appendTx(tx101)
+  block10.appendTx(tx102)
   block6.setSuperRoot(constants.HashZero)
   block8.setSuperRoot(constants.HashZero)
+  block10.setSuperRoot(constants.HashZero)
 
   beforeEach(() => {
     storage = new MockStorage()
@@ -90,21 +94,23 @@ describe('SegmentHistoryManager', () => {
       blkNum8,
       block8.getRoot()
     ))
+    segmentHistoryManager.appendBlockHeader(new WaitingBlockWrapper(
+      blkNum10,
+      block10.getRoot()
+    ))
+
     segmentHistoryManager.init('key', segment1)
+    // check inclusion
     await segmentHistoryManager.appendSegmentedBlock("key", block6.getSegmentedBlock(segment1))
+    // check exclusion
     await segmentHistoryManager.appendSegmentedBlock("key", block8.getSegmentedBlock(segment1))
+    // check inclusion
+    await segmentHistoryManager.appendSegmentedBlock("key", block10.getSegmentedBlock(segment1))
 
     const utxo = await segmentHistoryManager.verifyHistory('key')
-    assert.equal(utxo[0].getBlkNum().toNumber(), blkNum8.toNumber())
+    assert.equal(utxo[0].getBlkNum().toNumber(), blkNum10.toNumber())
     assert.deepEqual(utxo[0].getOwner(), AliceAddress)
     assert.equal(utxo[0].getSegment().toBigNumber().toNumber(), segment1.toBigNumber().toNumber())
   })
 
 })
-
-function createTransfer(privKey: string, predicate: string, seg: Segment, blkNum: BigNumber, to: string) {
-  const stateUpdate = OwnershipPredicate.create(seg, blkNum, predicate, to)
-  const tx= new SignedTransaction([stateUpdate])
-  tx.sign(privKey)
-  return tx
-}
