@@ -20,7 +20,7 @@ export class DefragAlgorithm {
     ownershipPredicate: string,
     myAddress: Address
   ): StateUpdate | null {
-    let tx = null
+    let tx: StateUpdate | null = null
     let segmentEndMap = new Map<string, SignedTransactionWithProof>()
     utxos.forEach((_tx) => {
       const segment = _tx.getOutput().getSegment()
@@ -48,7 +48,7 @@ export class DefragAlgorithm {
   static makeSwapRequest(
     utxos: SignedTransactionWithProof[]
   ): SwapRequest | null {
-    let swapRequest = null
+    let swapRequest: SwapRequest | null = null
     utxos.forEach((txNeighbor) => {
       const neighbor = txNeighbor.getOutput().getSegment()
       const txs = DefragAlgorithm.searchHole(utxos, neighbor)
