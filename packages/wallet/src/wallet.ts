@@ -707,6 +707,13 @@ export class ChamberWallet extends EventEmitter {
     return fastTransferResponse
   }
 
+  async sendTransaction(
+    signedTx: SignedTransaction
+  ): Promise<ChamberResult<boolean>> {
+    signedTx.sign(this.wallet.privateKey)
+    return await this.client.sendTransaction(signedTx)
+  }
+
   async merge() {
     const targetBlock = ethers.utils.bigNumberify(this.getTargetBlockNumber())
     const tx = this.searchMergable(targetBlock)
