@@ -2,6 +2,9 @@ language: python
 python:
   - "3.6"
 
+env:
+  - NODE_ENV=ci
+
 cache:
   bundler: true
   directories:
@@ -14,6 +17,7 @@ before_install:
   - nvm install v10.15.3
   - npm install -g yarn
   - npm install -g lerna
+  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
 
 install:
   - lerna bootstrap
@@ -24,3 +28,6 @@ script:
 
 dist: trusty
 sudo: false
+
+addons:
+  chrome: stable
