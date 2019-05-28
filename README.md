@@ -77,7 +77,6 @@ You need to install them before deploying Plasma Chamber contracts.
     * npm 
     * lerna
     * yarn 
-    * lerna bootstrap 
     * truffle
 
 ## Deploy contracts
@@ -93,7 +92,7 @@ deploy contracts.
 npm i lerna yarn -g
 git clone https://github.com/cryptoeconomicslab/plasma-chamber
 cd plasma-chamber 
-lerna bootstrap
+lerna exec yarn install
 cd packages/contracts
 # switch python3.x
 yarn build
