@@ -28,6 +28,11 @@ def __init__(_verifierUtil: address):
   self.verifierUtil = _verifierUtil
 
 @public
+@payable 
+def __default__():
+  pass
+
+@public
 @constant
 def decodeState(
   stateBytes: bytes[256]

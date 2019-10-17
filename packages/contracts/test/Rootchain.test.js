@@ -113,6 +113,50 @@ contract("RootChain", ([alice, bob, operator, user4, user5, admin]) => {
     })
   });
 
+
+  describe("finalizeExit", () => {
+
+    const exitableEnd = ethers.utils.bigNumberify('1000000')
+    const segment = Segment.ETH(
+      ethers.utils.bigNumberify('0'),
+      ethers.utils.bigNumberify('1000000'))
+    const blkNum = ethers.utils.bigNumberify(3)
+
+    beforeEach(async () => {
+      await this.rootChain.deposit(
+        {
+          from: alice,
+          value: '1000000000000000'
+        })
+    })
+
+    it("should succeed finalizeExit", async () => {
+      const stateUpdate = OwnershipPredicate.create(
+        segment,
+        blkNum,
+        this.ownershipPredicate.address,
+        alice)
+      const result = await this.rootChain.exit(
+        3 * 100,
+        segment.toBigNumber(),
+        stateUpdate.encode(),
+        '0x00',
+        {
+          from: alice,
+          value: BOND
+        });
+      const exitId = result.receipt.logs[0].args._exitId
+      await increaseTime(duration.weeks(6));
+      await this.rootChain.finalizeExit(
+        exitableEnd,
+        exitId,
+        stateUpdate.encode(),
+        {
+          from: alice
+        })
+    })
+  })
+
   describe("exit", () => {
 
     const exitableEnd = ethers.utils.bigNumberify('3000000')
